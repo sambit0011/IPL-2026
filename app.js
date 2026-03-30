@@ -20,12 +20,17 @@ const TEAM_LOGOS = {
 };
 
 let allPlayerData = [];
+let metadataMatches = []; // Store match number + name globally
 
 const elements = {
     mainView: document.getElementById('main-view'),
     detailsView: document.getElementById('details-view'),
+    allMatchesView: document.getElementById('all-matches-view'),
     list: document.getElementById('leaderboard-list'),
     matchesList: document.getElementById('matches-list'),
+    allMatchesList: document.getElementById('all-matches-list'),
+    tabLeaderboard: document.getElementById('tab-leaderboard'),
+    tabMatches: document.getElementById('tab-matches'),
     detailsName: document.getElementById('details-name'),
     detailsTotal: document.getElementById('details-total-points'),
     backBtn: document.getElementById('back-btn'),
@@ -78,6 +83,17 @@ function parseCSV(csv) {
     const headers = lines[0];
     const matchNumbers = lines[1] || [];
     const matchNames = lines[2] || [];
+    
+    // Reset and populate metadata
+    metadataMatches = [];
+    for (let j = 5; j < headers.length; j++) {
+        if (headers[j] || matchNames[j]) {
+            metadataMatches.push({
+                number: matchNumbers[j] || j - 4,
+                name: matchNames[j] || headers[j]
+            });
+        }
+    }
     
     const result = [];
 
@@ -273,10 +289,68 @@ function updateSummary(data) {
 }
 
 /**
+ * Render All Matches Tab
+ */
+function renderAllMatches() {
+    elements.allMatchesList.innerHTML = '';
+    
+    metadataMatches.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'match-card';
+        
+        const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+        let logoHtml = '';
+        if (teamParts.length === 2) {
+            const logo1 = TEAM_LOGOS[teamParts[0]] || '';
+            const logo2 = TEAM_LOGOS[teamParts[1]] || '';
+            logoHtml = `
+                <div class="match-card-logos">
+                    <img src="${logo1}" class="card-logo">
+                    <span class="vs-text">VS</span>
+                    <img src="${logo2}" class="card-logo">
+                </div>
+            `;
+        }
+
+        item.innerHTML = `
+            <div class="card-header">Match ${m.number}</div>
+            ${logoHtml}
+            <div class="match-name-small">${m.name}</div>
+        `;
+        elements.allMatchesList.appendChild(item);
+    });
+}
+
+/**
+ * Tab Switching Logic
+ */
+function switchTab(tab) {
+    if (tab === 'leaderboard') {
+        elements.tabLeaderboard.classList.add('active');
+        elements.tabMatches.classList.remove('active');
+        elements.mainView.style.display = 'block';
+        elements.statsSection.style.display = 'grid';
+        elements.allMatchesView.classList.add('hidden');
+    } else {
+        elements.tabMatches.classList.add('active');
+        elements.tabLeaderboard.classList.remove('active');
+        elements.mainView.style.display = 'none';
+        elements.statsSection.style.display = 'none';
+        elements.allMatchesView.classList.remove('hidden');
+        renderAllMatches();
+    }
+    // Always hide details when switching main tabs
+    elements.detailsView.style.display = 'none';
+    elements.detailsView.classList.add('hidden');
+}
+
+/**
  * Event Listeners
  */
 function setupEventListeners() {
     elements.backBtn.onclick = goBack;
+    elements.tabLeaderboard.onclick = () => switchTab('leaderboard');
+    elements.tabMatches.onclick = () => switchTab('matches');
 }
 
 document.addEventListener('DOMContentLoaded', init);

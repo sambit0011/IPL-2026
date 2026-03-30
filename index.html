@@ -21,7 +21,11 @@
                     <p>FANTASY LEADERBOARD</p>
                 </div>
             </div>
-
+            
+            <nav class="tab-nav">
+                <button id="tab-leaderboard" class="tab-btn active">LEADERBOARD</button>
+                <button id="tab-matches" class="tab-btn">ALL MATCHES</button>
+            </nav>
         </header>
 
         <!-- Stats Overview -->
@@ -51,6 +55,11 @@
                 </div>
             </div>
         </main>
+
+        <!-- All Matches View -->
+        <section id="all-matches-view" class="matches-grid-section hidden">
+            <div id="all-matches-list" class="matches-grid"></div>
+        </section>
 
         <!-- Player Details View (Hidden by default) -->
         <section id="details-view" class="details-section hidden">
