@@ -36,15 +36,14 @@
             </div>
         </section>
 
-        <!-- Leaderboard -->
-        <main class="leaderboard-section">
+        <!-- Main Dashboard View -->
+        <main id="main-view" class="leaderboard-section">
             <div class="leaderboard-header">
                 <span class="rank">#</span>
                 <span class="player">Player</span>
                 <span class="points">Points</span>
             </div>
             <div id="leaderboard-list" class="leaderboard-list">
-                <!-- Data will be injected here -->
                 <div class="loading-shimmer">
                     <div class="shimmer-item"></div>
                     <div class="shimmer-item"></div>
@@ -52,6 +51,27 @@
                 </div>
             </div>
         </main>
+
+        <!-- Player Details View (Hidden by default) -->
+        <section id="details-view" class="details-section hidden">
+            <header class="details-header">
+                <button id="back-btn" class="back-button">←</button>
+                <div class="details-title">
+                    <h2 id="details-name">Player Name</h2>
+                    <p id="details-total-points">0 Points</p>
+                </div>
+            </header>
+            <div class="matches-container">
+                <div class="match-header">
+                    <span>M#</span>
+                    <span>Matchup</span>
+                    <span>Earned</span>
+                </div>
+                <div id="matches-list" class="matches-list">
+                    <!-- Match data here -->
+                </div>
+            </div>
+        </section>
 
         <!-- Footer -->
         <footer>

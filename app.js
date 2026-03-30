@@ -13,8 +13,13 @@ const DUMMY_DATA = [
 let allPlayerData = [];
 
 const elements = {
+    mainView: document.getElementById('main-view'),
+    detailsView: document.getElementById('details-view'),
     list: document.getElementById('leaderboard-list'),
-    search: document.getElementById('playerSearch'),
+    matchesList: document.getElementById('matches-list'),
+    detailsName: document.getElementById('details-name'),
+    detailsTotal: document.getElementById('details-total-points'),
+    backBtn: document.getElementById('back-btn'),
     totalPlayers: document.getElementById('total-players'),
     topScore: document.getElementById('top-score'),
     lastUpdated: document.getElementById('last-update-time'),
@@ -53,25 +58,35 @@ async function loadData() {
 }
 
 /**
- * CSV Parser (Strictly uses sheet columns: Name@0, Rank@1, PrevRank@2, Total@3)
+ * CSV Parser (Name@0, Rank@1, PrevRank@2, Total@3, Matches@5+)
  */
 function parseCSV(csv) {
     const lines = csv.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     const result = [];
 
-    // Skip first header, then filter
     for (let i = 1; i < lines.length; i++) {
         const row = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        
-        // Filter out empty rows or header rows
         if (row.length < 4 || !row[0] || row[0].toLowerCase().includes('player name')) continue;
+
+        // Parse matches
+        const matches = [];
+        for (let j = 5; j < row.length; j++) {
+            if (headers[j] && (row[j] || row[j] === "0")) {
+                matches.push({
+                    number: j - 4,
+                    name: headers[j],
+                    points: row[j] || "0"
+                });
+            }
+        }
 
         result.push({
             name: row[0],
-            rank: row[1] || i, // Use rank directly from sheet
+            rank: row[1] || i,
             previousRank: row[2] || null,
-            points: row[3] || 0, // Use points directly from sheet
-            team: "POINTS TABLE" 
+            points: row[3] || 0,
+            matches: matches
         });
     }
 
@@ -79,16 +94,11 @@ function parseCSV(csv) {
 }
 
 /**
- * Render List up to DOM
+ * Render Leaderboard
  */
 function renderLeaderboard(data) {
     elements.list.innerHTML = '';
     
-    if (data.length === 0) {
-        elements.list.innerHTML = '<div class="no-results" style="text-align:center; padding:20px; color:var(--text-secondary);">No players found.</div>';
-        return;
-    }
-
     data.forEach((p, index) => {
         const item = document.createElement('div');
         item.className = `leaderboard-item ${index < 3 ? 'top-three' : ''}`;
@@ -103,6 +113,8 @@ function renderLeaderboard(data) {
                 movementIcon = `<div style="color:#f87171; font-size:0.65rem; font-weight:700; margin-top:2px;">▼ Down</div>`;
             }
         }
+
+        item.onclick = () => showPlayerDetails(p);
 
         item.innerHTML = `
             <div class="rank" style="display:flex; flex-direction:column; align-items:center;">
@@ -120,6 +132,39 @@ function renderLeaderboard(data) {
 }
 
 /**
+ * Navigation: Show Details
+ */
+function showPlayerDetails(player) {
+    elements.mainView.classList.add('hidden');
+    elements.detailsView.classList.remove('hidden');
+    
+    elements.detailsName.textContent = player.name;
+    elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
+    
+    elements.matchesList.innerHTML = '';
+    player.matches.forEach(m => {
+        const row = document.createElement('div');
+        row.className = 'match-item';
+        row.innerHTML = `
+            <span class="match-num">${m.number}</span>
+            <span class="match-name">${m.name}</span>
+            <span class="match-points">${m.points}</span>
+        `;
+        elements.matchesList.appendChild(row);
+    });
+    
+    window.scrollTo(0, 0);
+}
+
+/**
+ * Navigation: Back to Leaderboard
+ */
+function goBack() {
+    elements.detailsView.classList.add('hidden');
+    elements.mainView.classList.remove('hidden');
+}
+
+/**
  * Update Stats Cards
  */
 function updateStats(data) {
@@ -131,13 +176,7 @@ function updateStats(data) {
  * Event Listeners
  */
 function setupEventListeners() {
-    elements.search.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filtered = allPlayerData.filter(p => 
-            p.name.toLowerCase().includes(searchTerm)
-        );
-        renderLeaderboard(filtered);
-    });
+    elements.backBtn.onclick = goBack;
 }
 
 document.addEventListener('DOMContentLoaded', init);

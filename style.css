@@ -64,6 +64,7 @@ header {
     letter-spacing: 1px;
     background: linear-gradient(to right, #fff, var(--gold));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -248,17 +249,104 @@ footer p {
     opacity: 0.6;
 }
 
-/* Animations */
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-20px); }
+/* Hidden Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Details Section */
+.details-section {
+    animation: fadeIn 0.4s ease-out;
+}
+
+.details-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.back-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    color: var(--gold);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-button:hover {
+    background: var(--bg-card-hover);
+    transform: translateX(-4px);
+}
+
+.details-title h2 {
+    font-size: 1.4rem;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.details-title p {
+    font-size: 0.9rem;
+    color: var(--gold);
+    font-weight: 700;
+}
+
+.matches-container {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.match-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.matches-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.match-item {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--glass-border);
+    font-size: 0.9rem;
+}
+
+.match-item:last-child {
+    border-bottom: none;
+}
+
+.match-num {
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.match-name {
+    font-weight: 500;
+}
+
+.match-points {
+    text-align: right;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(-10px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes shimmer {
-    to { background-position: -200% 0; }
-}
