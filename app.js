@@ -167,7 +167,15 @@ function renderLeaderboard(data) {
     
     data.forEach((p, index) => {
         const item = document.createElement('div');
-        item.className = `leaderboard-item ${index < 3 ? 'top-three' : ''}`;
+        
+        const r = parseInt(p.rank);
+        let medalClass = '';
+        if (r === 1) medalClass = 'rank-1';
+        else if (r === 2) medalClass = 'rank-2';
+        else if (r === 3) medalClass = 'rank-3';
+        else if (r === 4) medalClass = 'rank-4';
+        
+        item.className = `leaderboard-item ${medalClass}`;
         
         let movementIcon = '';
         if (p.previousRank && p.rank !== p.previousRank) {

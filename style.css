@@ -267,10 +267,31 @@ header {
     transform: scale(1.02);
 }
 
-.leaderboard-item.top-three .rank {
-    color: var(--gold);
-    font-weight: 800;
+.leaderboard-item.rank-1 {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border: 1.5px solid rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
 }
+.leaderboard-item.rank-1 .rank { color: #ffd700; font-size: 1.3rem; font-weight: 800 !important; }
+.leaderboard-item.rank-1 .player-name { font-weight: 800; color: #ffd700; }
+
+.leaderboard-item.rank-2 {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 100%);
+    border: 1.5px solid rgba(192, 192, 192, 0.6);
+}
+.leaderboard-item.rank-2 .rank { color: #e5e7eb; font-weight: 700; }
+
+.leaderboard-item.rank-3 {
+    background: linear-gradient(90deg, rgba(229, 228, 226, 0.15) 0%, rgba(229, 228, 226, 0.05) 100%);
+    border: 1.5px solid rgba(229, 228, 226, 0.5);
+}
+.leaderboard-item.rank-3 .rank { color: #d1d5db; }
+
+.leaderboard-item.rank-4 {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%);
+    border: 1.5px solid rgba(205, 127, 50, 0.5);
+}
+.leaderboard-item.rank-4 .rank { color: #cd7f32; }
 
 .rank {
     font-weight: 600;
