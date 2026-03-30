@@ -5,15 +5,16 @@
 
 const TEAM_LOGOS = {
     'RCB': 'https://www.iplt20.com/assets/images/teams-logo/secondary/RCB.png',
-    'MI': 'https://static.iplt20.com/players/210/107.png',
-    'SRH': 'https://static.iplt20.com/players/210/112.png',
-    'CSK': 'https://static.iplt20.com/players/210/1.png',
-    'KKR': 'https://static.iplt20.com/players/210/102.png',
-    'RR': 'https://static.iplt20.com/players/210/110.png',
-    'PBKS': 'https://static.iplt20.com/players/210/108.png',
-    'GT': 'https://static.iplt20.com/players/210/118.png',
-    'LSG': 'https://static.iplt20.com/players/210/117.png',
-    'DC': 'https://static.iplt20.com/players/210/111.png'
+    'MI': 'https://www.iplt20.com/assets/images/teams-logo/secondary/MI.png',
+    'SRH': 'https://www.iplt20.com/assets/images/teams-logo/secondary/SRH.png',
+    'CSK': 'https://www.iplt20.com/assets/images/teams-logo/secondary/CSK.png',
+    'KKR': 'https://www.iplt20.com/assets/images/teams-logo/secondary/KKR.png',
+    'RR': 'https://www.iplt20.com/assets/images/teams-logo/secondary/RR.png',
+    'PBKS': 'https://www.iplt20.com/assets/images/teams-logo/secondary/PBKS.png',
+    'GT': 'https://www.iplt20.com/assets/images/teams-logo/secondary/GT.png',
+    'LSG': 'https://www.iplt20.com/assets/images/teams-logo/secondary/LSG.png',
+    'DC': 'https://www.iplt20.com/assets/images/teams-logo/secondary/DC.png',
+    'PBK': 'https://www.iplt20.com/assets/images/teams-logo/secondary/PBKS.png' // Alias
 };
 
 let allPlayerData = [];
@@ -223,7 +224,7 @@ function showPlayerDetails(player) {
             const row = document.createElement('div');
             row.className = 'match-item';
             
-            const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+            const teamParts = m.name.split(/\s+[vV][sS]\s+/).map(t => t.trim().toUpperCase());
             let logos = '';
             if (teamParts.length === 2) {
                 const logo1 = TEAM_LOGOS[teamParts[0]] || '';
@@ -273,7 +274,7 @@ function renderAllMatches() {
         item.className = 'leaderboard-item';
         item.style.gridTemplateColumns = '50px 1fr auto';
         
-        const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+        const teamParts = m.name.split(/\s+vs\s+/i).map(t => t.trim().toUpperCase());
         let logos = '';
         if (teamParts.length === 2) {
             const l1 = TEAM_LOGOS[teamParts[0]] || '';
