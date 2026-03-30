@@ -26,14 +26,19 @@ const elements = {
     mainView: document.getElementById('main-view'),
     detailsView: document.getElementById('details-view'),
     allMatchesView: document.getElementById('all-matches-view'),
+    matchIndividualView: document.getElementById('match-individual-view'),
     list: document.getElementById('leaderboard-list'),
     matchesList: document.getElementById('matches-list'),
+    matchPlayerList: document.getElementById('match-player-list'),
     allMatchesList: document.getElementById('all-matches-list'),
     tabLeaderboard: document.getElementById('tab-leaderboard'),
     tabMatches: document.getElementById('tab-matches'),
     detailsName: document.getElementById('details-name'),
     detailsTotal: document.getElementById('details-total-points'),
+    matchDetailsTitle: document.getElementById('match-details-title'),
+    matchDetailsSubtitle: document.getElementById('match-details-subtitle'),
     backBtn: document.getElementById('back-btn'),
+    backToMatchesBtn: document.getElementById('back-to-matches-btn'),
     statsSection: document.getElementById('stats-section'),
     totalPlayers: document.getElementById('total-players'),
     topScore: document.getElementById('top-score'),
@@ -89,7 +94,8 @@ function parseCSV(csv) {
     for (let j = 5; j < headers.length; j++) {
         if (headers[j] || matchNames[j]) {
             metadataMatches.push({
-                number: matchNumbers[j] || j - 4,
+                index: j,
+                number: matchNumbers[j] || (j - 4),
                 name: matchNames[j] || headers[j]
             });
         }
@@ -298,6 +304,17 @@ function renderAllMatches() {
         const item = document.createElement('div');
         item.className = 'match-card';
         
+        // Check if any player has data for this match to make it clickable
+        const hasData = allPlayerData.some(p => {
+            const match = p.matches.find(pm => pm.id === m.index);
+            return match && match.points !== "";
+        });
+
+        if (hasData) {
+            item.classList.add('has-results');
+            item.onclick = () => showMatchIndividualDetails(m);
+        }
+        
         const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
         let logoHtml = '';
         if (teamParts.length === 2) {
@@ -313,12 +330,65 @@ function renderAllMatches() {
         }
 
         item.innerHTML = `
-            <div class="card-header">Match ${m.number}</div>
+            <div class="card-header">Match ${m.number} ${hasData ? '✓' : ''}</div>
             ${logoHtml}
             <div class="match-name-small">${m.name}</div>
         `;
         elements.allMatchesList.appendChild(item);
     });
+}
+
+/**
+ * Show Match Individual Performance
+ */
+function showMatchIndividualDetails(m) {
+    elements.allMatchesView.classList.add('hidden');
+    elements.matchIndividualView.classList.remove('hidden');
+    elements.matchIndividualView.style.display = 'block';
+
+    elements.matchDetailsTitle.textContent = `Match ${m.number}`;
+    elements.matchDetailsSubtitle.textContent = m.name;
+
+    // Collect Data
+    const scores = allPlayerData.map(p => {
+        const matchInfo = p.matches.find(pm => pm.id === m.index);
+        return {
+            name: p.name,
+            points: parseFloat(matchInfo ? matchInfo.points : 0) || 0
+        };
+    });
+
+    // Sort by points
+    scores.sort((a, b) => b.points - a.points);
+
+    // Render ranks
+    elements.matchPlayerList.innerHTML = '';
+    let currentRank = 1;
+    scores.forEach((s, i) => {
+        if (i > 0 && s.points < scores[i-1].points) currentRank = i + 1;
+        
+        const row = document.createElement('div');
+        row.className = 'match-item';
+        row.innerHTML = `
+            <span class="match-num">#${currentRank}</span>
+            <div class="match-info">
+                <span class="match-name">${s.name}</span>
+            </div>
+            <span class="match-points">${s.points.toLocaleString()}</span>
+        `;
+        elements.matchPlayerList.appendChild(row);
+    });
+
+    window.scrollTo(0, 0);
+}
+
+/**
+ * Navigation: Back to Matches
+ */
+function goBackToMatches() {
+    elements.matchIndividualView.classList.add('hidden');
+    elements.matchIndividualView.style.display = 'none';
+    elements.allMatchesView.classList.remove('hidden');
 }
 
 /**
@@ -328,20 +398,20 @@ function switchTab(tab) {
     if (tab === 'leaderboard') {
         elements.tabLeaderboard.classList.add('active');
         elements.tabMatches.classList.remove('active');
-        elements.mainView.style.display = 'block';
-        elements.statsSection.style.display = 'grid';
+        elements.mainView.style.setProperty('display', 'block', 'important');
+        elements.statsSection.style.setProperty('display', 'grid', 'important');
         elements.allMatchesView.classList.add('hidden');
     } else {
         elements.tabMatches.classList.add('active');
         elements.tabLeaderboard.classList.remove('active');
-        elements.mainView.style.display = 'none';
-        elements.statsSection.style.display = 'none';
+        elements.mainView.style.setProperty('display', 'none', 'important');
+        elements.statsSection.style.setProperty('display', 'none', 'important');
         elements.allMatchesView.classList.remove('hidden');
         renderAllMatches();
     }
     // Always hide details when switching main tabs
-    elements.detailsView.style.display = 'none';
-    elements.detailsView.classList.add('hidden');
+    elements.detailsView.style.setProperty('display', 'none', 'important');
+    elements.matchIndividualView.style.setProperty('display', 'none', 'important');
 }
 
 /**
@@ -349,6 +419,7 @@ function switchTab(tab) {
  */
 function setupEventListeners() {
     elements.backBtn.onclick = goBack;
+    elements.backToMatchesBtn.onclick = goBackToMatches;
     elements.tabLeaderboard.onclick = () => switchTab('leaderboard');
     elements.tabMatches.onclick = () => switchTab('matches');
 }

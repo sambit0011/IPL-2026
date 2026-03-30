@@ -104,17 +104,20 @@ header {
     transition: transform 0.2s;
 }
 
-.match-card:hover {
-    transform: translateY(-5px);
-    background: var(--bg-card-hover);
+.match-card.has-results {
+    border: 1px solid rgba(252, 186, 3, 0.4);
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(252, 186, 3, 0.1);
 }
 
-.match-card .card-header {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    font-weight: 700;
-    margin-bottom: 12px;
+.match-card.has-results .card-header {
+    color: var(--gold);
+}
+
+.match-card.has-results:hover {
+    background: rgba(252, 186, 3, 0.05);
+    border-color: var(--gold);
+    transform: translateY(-5px);
 }
 
 .match-card-logos {
