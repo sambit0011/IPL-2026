@@ -289,7 +289,7 @@ function updateSummary(data) {
         const latestMatch = data[0].matches[data[0].matches.length - 1];
         const info = document.getElementById('update-match-info');
         if (info) {
-            info.textContent = `Points updated after Match ${latestMatch.number} ${latestMatch.name}`;
+            info.textContent = `Points updated after ${latestMatch.number} ${latestMatch.name}`;
         }
     }
 }
@@ -330,7 +330,7 @@ function renderAllMatches() {
         }
 
         item.innerHTML = `
-            <div class="card-header">Match ${m.number} ${hasData ? '✓' : ''}</div>
+            <div class="card-header">${m.number} ${hasData ? '✓' : ''}</div>
             ${logoHtml}
             <div class="match-name-small">${m.name}</div>
         `;
@@ -346,7 +346,7 @@ function showMatchIndividualDetails(m) {
     elements.matchIndividualView.classList.remove('hidden');
     elements.matchIndividualView.style.display = 'block';
 
-    elements.matchDetailsTitle.textContent = `Match ${m.number}`;
+    elements.matchDetailsTitle.textContent = m.number;
     elements.matchDetailsSubtitle.textContent = m.name;
 
     // Collect Data
