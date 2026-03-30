@@ -186,7 +186,6 @@ function showPlayerDetails(player) {
             }
 
             row.innerHTML = `
-                <span class="match-num">${m.number}</span>
                 <div class="match-info">
                     ${logoHtml}
                     <span class="match-name">${m.name}</span>
