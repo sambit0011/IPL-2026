@@ -29,6 +29,11 @@ body {
     min-height: 100vh;
 }
 
+.hidden {
+    display: none !important;
+}
+
+
 .app-container {
     max-width: 480px; /* Mobile focused */
     margin: 0 auto;

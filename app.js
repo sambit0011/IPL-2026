@@ -1,6 +1,6 @@
 /**
  * IPL 2026 Fantasy Leaderboard
- * Author: Antigravity AI
+ * Final Fixed Version
  */
 
 const TEAM_LOGOS = {
@@ -61,6 +61,8 @@ async function loadData() {
         const csvText = await response.text();
         allPlayerData = parseCSV(csvText);
         
+        console.log("Parsed Player Data:", allPlayerData);
+        
         renderLeaderboard(allPlayerData);
         renderAllMatches();
         updateSummary(allPlayerData);
@@ -77,7 +79,7 @@ function parseCSV(csv) {
     const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
     if (lines.length < 2) return [];
     
-    // 1. Discover Metadata Rows
+    // Discover Meta
     let matchNamesRow = lines.find(r => r[5] && r[5].toLowerCase().includes(' vs ')) || lines[0];
     let matchNumbersRow = lines.find(r => r[5] && (r[5] === "1" || r[5] === "Match 1")) || lines[1] || [];
     
@@ -85,7 +87,7 @@ function parseCSV(csv) {
     matchSchedule = [];
     const completedMatchIds = new Set();
 
-    // Pass 1: Parse Players & Detect Completed Matches
+    // Pass 1: Parse Players
     for (let i = 0; i < lines.length; i++) {
         const row = lines[i];
         if (row[0] && row[0].length > 2 && !row[0].toLowerCase().includes('player name')) {
@@ -113,7 +115,7 @@ function parseCSV(csv) {
         }
     }
 
-    // Pass 2: Map Match Ranks Table (Name in Col E / index 4)
+    // Pass 2: Ranks Table Mapping
     for (let i = 0; i < lines.length; i++) {
         const row = lines[i];
         if (!row[0] && row[4] && row[4].trim() !== "" && !row[4].toLowerCase().includes('player name')) {
@@ -122,7 +124,7 @@ function parseCSV(csv) {
             if (player) {
                 for (let j = 5; j < row.length; j++) {
                     const mRank = row[j] ? row[j].trim() : "";
-                    if (mRank !== "") {
+                    if (mRank !== "" && player.matches) {
                         const m = player.matches.find(match => match.id === j);
                         if (m) m.rank = mRank;
                     }
@@ -131,7 +133,7 @@ function parseCSV(csv) {
         }
     }
 
-    // 3. Build Global Schedule
+    // Build Schedule
     for (let j = 5; j < matchNamesRow.length; j++) {
         const mName = matchNamesRow[j] || "";
         if (mName !== "" && mName.length > 2) {
@@ -152,8 +154,7 @@ function parseCSV(csv) {
  */
 function renderLeaderboard(data) {
     elements.list.innerHTML = '';
-    
-    data.forEach((p, index) => {
+    data.forEach((p) => {
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
         item.onclick = () => showPlayerDetails(p);
@@ -170,135 +171,74 @@ function renderLeaderboard(data) {
 }
 
 /**
- * Navigation: Show Details
+ * View Switching Logic
+ */
+function switchView(viewId) {
+    // Hide everything
+    elements.mainView.classList.add('hidden');
+    elements.matchesView.classList.add('hidden');
+    elements.detailsView.classList.add('hidden');
+    elements.matchView.classList.add('hidden');
+    
+    // Show requested
+    if (viewId === 'leaderboard') {
+        elements.mainView.classList.remove('hidden');
+        elements.overviewStats.classList.remove('hidden');
+        elements.tabsNav.classList.remove('hidden');
+        elements.tabLeaderboard.classList.add('active');
+        elements.tabMatches.classList.remove('active');
+    } else if (viewId === 'matches') {
+        elements.matchesView.classList.remove('hidden');
+        elements.overviewStats.classList.add('hidden');
+        elements.tabsNav.classList.remove('hidden');
+        elements.tabMatches.classList.add('active');
+        elements.tabLeaderboard.classList.remove('active');
+    } else if (viewId === 'details') {
+        elements.detailsView.classList.remove('hidden');
+        elements.overviewStats.classList.add('hidden');
+        elements.tabsNav.classList.add('hidden');
+    } else if (viewId === 'match-results') {
+        elements.matchView.classList.remove('hidden');
+        elements.overviewStats.classList.add('hidden');
+        elements.tabsNav.classList.add('hidden');
+    }
+    
+    window.scrollTo(0, 0);
+}
+
+/**
+ * Navigation Actions
  */
 function showPlayerDetails(player) {
     if (!player) return;
-    
-    elements.tabsNav.style.display = 'none';
-    elements.overviewStats.style.display = 'none';
-    elements.mainView.style.setProperty('display', 'none', 'important');
-    elements.matchesView.style.setProperty('display', 'none', 'important');
-    elements.detailsView.style.setProperty('display', 'block', 'important');
-    
+    switchView('details');
     elements.detailsName.textContent = player.name;
     elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
     
     elements.matchesList.innerHTML = '';
-    
     if (!player.matches || player.matches.length === 0) {
-        elements.matchesList.innerHTML = '<div style="padding:40px; text-align:center; opacity:0.6; color:#fff;">No match points tracked for this player yet.</div>';
+        elements.matchesList.innerHTML = '<div style="padding:40px; text-align:center; opacity:0.6; color:#fff;">No match points yet.</div>';
     } else {
         player.matches.forEach(m => {
             const row = document.createElement('div');
             row.className = 'match-item';
             
             const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
-            let logoHtml = '';
+            let logos = '';
             if (teamParts.length === 2) {
                 const logo1 = TEAM_LOGOS[teamParts[0]] || '';
                 const logo2 = TEAM_LOGOS[teamParts[1]] || '';
-                logoHtml = `
-                    <div class="match-logos">
-                        ${logo1 ? `<img src="${logo1}" class="mini-logo">` : ''}
-                        <span class="vs-text">vs</span>
-                        ${logo2 ? `<img src="${logo2}" class="mini-logo">` : ''}
-                    </div>
-                `;
+                logos = `<div class="match-logos">${logo1 ? `<img src="${logo1}" class="mini-logo">` : ''}<span class="vs-text">vs</span>${logo2 ? `<img src="${logo2}" class="mini-logo">` : ''}</div>`;
             }
 
-            row.innerHTML = `
-                <span class="match-num">${m.number}</span>
-                <div class="match-info">
-                    ${logoHtml}
-                    <span class="match-name">${m.name}</span>
-                </div>
-                <div class="match-points-col">
-                    <span class="match-points">${m.points}</span>
-                    ${m.rank ? `<span class="match-rank">#${m.rank} Rank</span>` : ''}
-                </div>
-            `;
+            row.innerHTML = `<span class="match-num">${m.number}</span><div class="match-info">${logos}<span class="match-name">${m.name}</span></div><div class="match-points-col"><span class="match-points">${m.points}</span>${m.rank ? `<span class="match-rank">#${m.rank} Rank</span>` : ''}</div>`;
             elements.matchesList.appendChild(row);
         });
     }
-    window.scrollTo(0, 0);
 }
 
-/**
- * Navigation: Back
- */
-function goBack() {
-    elements.detailsView.style.setProperty('display', 'none', 'important');
-    elements.matchView.style.setProperty('display', 'none', 'important');
-    elements.tabsNav.style.display = 'flex';
-    
-    if (elements.tabLeaderboard.classList.contains('active')) {
-        elements.mainView.style.setProperty('display', 'block', 'important');
-        elements.overviewStats.style.display = 'block';
-    } else {
-        elements.matchesView.style.setProperty('display', 'block', 'important');
-        elements.overviewStats.style.display = 'none';
-    }
-    window.scrollTo(0, 0);
-}
-
-/**
- * Render All Matches Tab
- */
-function renderAllMatches() {
-    elements.allMatchesList.innerHTML = '';
-    
-    matchSchedule.forEach(m => {
-        const item = document.createElement('div');
-        item.className = 'leaderboard-item';
-        item.style.gridTemplateColumns = '50px 1fr auto';
-        
-        const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
-        let logoHtml = '';
-        if (teamParts.length === 2) {
-            const logo1 = TEAM_LOGOS[teamParts[0]] || '';
-            const logo2 = TEAM_LOGOS[teamParts[1]] || '';
-            logoHtml = `
-                <div class="match-logos">
-                    ${logo1 ? `<img src="${logo1}" class="mini-logo">` : ''}
-                    <span class="vs-text">vs</span>
-                    ${logo2 ? `<img src="${logo2}" class="mini-logo">` : ''}
-                </div>
-            `;
-        }
-
-        item.innerHTML = `
-            <div class="rank">#${m.number.replace('Match ', '')}</div>
-            <div class="player-info">
-                ${logoHtml}
-                <span class="player-name">${m.name}</span>
-            </div>
-            <div class="points" style="font-size:0.75rem; color:${m.isCompleted ? 'var(--gold)' : 'var(--text-secondary)'}; font-weight:700;">
-                ${m.isCompleted ? 'RESULTS' : 'SOON'}
-            </div>
-        `;
-        
-        if (m.isCompleted) {
-            item.style.cursor = 'pointer';
-            item.onclick = (e) => {
-                e.stopPropagation();
-                showMatchDetails(m);
-            };
-        }
-        elements.allMatchesList.appendChild(item);
-    });
-}
-
-/**
- * Render Match Logic
- */
-function showMatchDetails(match) {
-    elements.tabsNav.style.display = 'none';
-    elements.overviewStats.style.display = 'none';
-    elements.mainView.style.setProperty('display', 'none', 'important');
-    elements.matchesView.style.setProperty('display', 'none', 'important');
-    elements.matchView.style.setProperty('display', 'block', 'important');
-    
+function showMatchResults(match) {
+    switchView('match-results');
     elements.matchName.textContent = `Match ${match.number}: ${match.name}`;
     elements.matchLeaderboardList.innerHTML = '';
     
@@ -313,26 +253,55 @@ function showMatchDetails(match) {
         const row = document.createElement('div');
         row.className = 'match-item';
         row.style.gridTemplateColumns = '50px 1fr 100px';
-        row.innerHTML = `
-            <span class="rank" style="color:var(--text-secondary);">#${idx + 1}</span>
-            <span class="player-name">${r.name}</span>
-            <span class="match-points">${r.points}</span>
-        `;
+        row.innerHTML = `<span class="rank">#${idx + 1}</span><span class="player-name" style="font-weight:600;">${r.name}</span><span class="match-points">${r.points}</span>`;
         elements.matchLeaderboardList.appendChild(row);
     });
-    window.scrollTo(0, 0);
+}
+
+function goBack() {
+    if (elements.tabLeaderboard.classList.contains('active')) switchView('leaderboard');
+    else switchView('matches');
 }
 
 /**
- * Summary Stats
+ * Render All Matches Tab
+ */
+function renderAllMatches() {
+    elements.allMatchesList.innerHTML = '';
+    matchSchedule.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        item.style.gridTemplateColumns = '50px 1fr auto';
+        
+        const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+        let logos = '';
+        if (teamParts.length === 2) {
+            const l1 = TEAM_LOGOS[teamParts[0]] || '';
+            const l2 = TEAM_LOGOS[teamParts[1]] || '';
+            logos = `<div class="match-logos">${l1 ? `<img src="${l1}" class="mini-logo">` : ''}<span class="vs-text">vs</span>${l2 ? `<img src="${l2}" class="mini-logo">` : ''}</div>`;
+        }
+
+        item.innerHTML = `<div class="rank">#${m.number.replace('Match ', '')}</div><div class="player-info">${logos}<span class="player-name">${m.name}</span></div><div class="points" style="font-size:0.7rem; font-weight:700; color:${m.isCompleted ? 'var(--gold)' : 'var(--text-secondary)'}">${m.isCompleted ? 'RESULTS' : 'SOON'}</div>`;
+        
+        if (m.isCompleted) {
+            item.style.cursor = 'pointer';
+            item.onclick = (e) => { e.stopPropagation(); showMatchResults(m); };
+        }
+        elements.allMatchesList.appendChild(item);
+    });
+}
+
+/**
+ * Update Stats
  */
 function updateSummary(data) {
     elements.totalPlayers.textContent = data.length;
-    elements.topScore.textContent = data.length > 0 ? Math.max(...data.map(p => p.points)).toLocaleString() : '--';
+    const top = data.length > 0 ? Math.max(...data.map(p => Number(p.points))) : 0;
+    elements.topScore.textContent = top.toLocaleString();
     
     if (data.length > 0 && data[0].matches.length > 0) {
-        const latestMatch = data[0].matches[data[0].matches.length - 1];
-        document.getElementById('update-match-info').textContent = `Points updated after Match ${latestMatch.number} ${latestMatch.name}`;
+        const lastM = data[0].matches[data[0].matches.length - 1];
+        document.getElementById('update-match-info').textContent = `Summary as of Match ${lastM.number}: ${lastM.name}`;
     }
 }
 
@@ -342,22 +311,8 @@ function updateSummary(data) {
 function setupEventListeners() {
     elements.backBtn.onclick = goBack;
     elements.matchBackBtn.onclick = goBack;
-    
-    elements.tabLeaderboard.onclick = () => {
-        elements.tabLeaderboard.classList.add('active');
-        elements.tabMatches.classList.remove('active');
-        elements.mainView.style.setProperty('display', 'block', 'important');
-        elements.matchesView.style.setProperty('display', 'none', 'important');
-        elements.overviewStats.style.display = 'block';
-    };
-    
-    elements.tabMatches.onclick = () => {
-        elements.tabMatches.classList.add('active');
-        elements.tabLeaderboard.classList.remove('active');
-        elements.matchesView.style.setProperty('display', 'block', 'important');
-        elements.mainView.style.setProperty('display', 'none', 'important');
-        elements.overviewStats.style.display = 'none';
-    };
+    elements.tabLeaderboard.onclick = () => switchView('leaderboard');
+    elements.tabMatches.onclick = () => switchView('matches');
 }
 
 document.addEventListener('DOMContentLoaded', init);
