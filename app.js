@@ -6,9 +6,18 @@ const CONFIG = {
 };
 
 // Fallback Dummy Data (only if fetch fails)
-const DUMMY_DATA = [
-    { rank: 1, name: "Pritam", team: "Fantasy Manager", points: 1764.5 },
-];
+const TEAM_LOGOS = {
+  "CSK": "https://documents.iplt20.com/ipl/CSK/logos/Logooutline/CSKoutline.png",
+  "DC": "https://documents.iplt20.com/ipl/DC/Logos/LogoOutline/DCoutline.png",
+  "GT": "https://documents.iplt20.com/ipl/GT/Logos/Logooutline/GToutline.png",
+  "KKR": "https://documents.iplt20.com/ipl/KKR/Logos/Logooutline/KKRoutline.png",
+  "LSG": "https://documents.iplt20.com/ipl/LSG/Logos/Logooutline/LSGoutline.png",
+  "MI": "https://documents.iplt20.com/ipl/MI/Logos/Logooutline/MIoutline.png",
+  "PBKS": "https://documents.iplt20.com/ipl/PBKS/Logos/Logooutline/PBKSoutline.png",
+  "RR": "https://documents.iplt20.com/ipl/RR/Logos/Logooutline/RRoutline.png",
+  "RCB": "https://documents.iplt20.com/ipl/RCB/Logos/Logooutline/RCBoutline.png",
+  "SRH": "https://documents.iplt20.com/ipl/SRH/Logos/Logooutline/SRHoutline.png"
+};
 
 let allPlayerData = [];
 
@@ -135,19 +144,43 @@ function renderLeaderboard(data) {
  * Navigation: Show Details
  */
 function showPlayerDetails(player) {
-    elements.mainView.classList.add('hidden');
+    if (!player) return;
+    
+    // Switch views
+    elements.mainView.style.display = 'none';
+    elements.detailsView.style.display = 'block';
     elements.detailsView.classList.remove('hidden');
     
     elements.detailsName.textContent = player.name;
     elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
     
     elements.matchesList.innerHTML = '';
+    
     player.matches.forEach(m => {
         const row = document.createElement('div');
         row.className = 'match-item';
+        
+        // Extract teams (e.g., "RCB vs SRH")
+        const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+        let logoHtml = '';
+        if (teamParts.length === 2) {
+            const logo1 = TEAM_LOGOS[teamParts[0]] || '';
+            const logo2 = TEAM_LOGOS[teamParts[1]] || '';
+            logoHtml = `
+                <div class="match-logos">
+                    ${logo1 ? `<img src="${logo1}" class="mini-logo" alt="${teamParts[0]}">` : ''}
+                    <span class="vs-text">vs</span>
+                    ${logo2 ? `<img src="${logo2}" class="mini-logo" alt="${teamParts[1]}">` : ''}
+                </div>
+            `;
+        }
+
         row.innerHTML = `
             <span class="match-num">${m.number}</span>
-            <span class="match-name">${m.name}</span>
+            <div class="match-info">
+                ${logoHtml}
+                <span class="match-name">${m.name}</span>
+            </div>
             <span class="match-points">${m.points}</span>
         `;
         elements.matchesList.appendChild(row);
@@ -160,8 +193,9 @@ function showPlayerDetails(player) {
  * Navigation: Back to Leaderboard
  */
 function goBack() {
+    elements.detailsView.style.display = 'none';
     elements.detailsView.classList.add('hidden');
-    elements.mainView.classList.remove('hidden');
+    elements.mainView.style.display = 'flex';
 }
 
 /**
