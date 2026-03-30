@@ -260,9 +260,15 @@ function goBack() {
 function renderAllMatches() {
     elements.allMatchesList.innerHTML = '';
     
+    if (matchSchedule.length === 0) {
+        elements.allMatchesList.innerHTML = '<div style="padding:40px; text-align:center; opacity:0.6; color:#fff;">Updating match schedule...</div>';
+        return;
+    }
+
     matchSchedule.forEach(m => {
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
+        item.style.gridTemplateColumns = '50px 1fr';
         
         const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
         let logoHtml = '';
@@ -279,12 +285,11 @@ function renderAllMatches() {
         }
 
         item.innerHTML = `
-            <div class="rank">#${m.number.replace('Match ', '')}</div>
+            <div class="rank">#${m.number}</div>
             <div class="player-info" style="display:flex; align-items:center; gap:12px;">
                 ${logoHtml}
                 <span class="player-name">${m.name}</span>
             </div>
-            <div class="points" style="font-size:0.75rem; color:var(--text-secondary);">Scheduled</div>
         `;
         elements.allMatchesList.appendChild(item);
     });
@@ -316,6 +321,7 @@ function setupEventListeners() {
     elements.tabLeaderboard.onclick = () => {
         elements.tabLeaderboard.classList.add('active');
         elements.tabMatches.classList.remove('active');
+        elements.overviewStats.style.display = 'block';
         elements.mainView.style.setProperty('display', 'block', 'important');
         elements.matchesView.style.setProperty('display', 'none', 'important');
     };
@@ -323,6 +329,7 @@ function setupEventListeners() {
     elements.tabMatches.onclick = () => {
         elements.tabMatches.classList.add('active');
         elements.tabLeaderboard.classList.remove('active');
+        elements.overviewStats.style.display = 'none';
         elements.matchesView.style.setProperty('display', 'block', 'important');
         elements.mainView.style.setProperty('display', 'none', 'important');
     };
