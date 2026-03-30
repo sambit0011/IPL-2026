@@ -188,7 +188,21 @@ function showPlayerDetails(player) {
     elements.detailsView.classList.remove('hidden');
     
     elements.detailsName.textContent = player.name;
-    elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
+    
+    // Calculate movement for header
+    let movementText = '';
+    if (player.previousRank && player.rank !== player.previousRank) {
+        const cur = parseInt(player.rank);
+        const prev = parseInt(player.previousRank);
+        if (cur < prev) movementText = ` <span style="color:#4ade80;">▲ Up</span>`;
+        else if (cur > prev) movementText = ` <span style="color:#f87171;">▼ Down</span>`;
+    }
+    
+    elements.detailsTotal.innerHTML = `
+        <span>${player.points.toLocaleString()} Total Points</span>
+        <span style="margin: 0 10px; opacity: 0.3;">|</span>
+        <span>Rank #${player.rank}${movementText}</span>
+    `;
     
     elements.matchesList.innerHTML = '';
     
