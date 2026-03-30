@@ -62,7 +62,7 @@ async function loadData() {
     }
 
     renderLeaderboard(allPlayerData);
-    updateStats(allPlayerData);
+    updateSummary(allPlayerData);
     elements.lastUpdated.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
@@ -207,7 +207,7 @@ function showPlayerDetails(player) {
             }
 
             row.innerHTML = `
-                <span class="match-num">M${m.number}</span>
+                <span class="match-num">${m.number}</span>
                 <div class="match-info">
                     ${logoHtml}
                     <span class="match-name">${m.name}</span>
@@ -234,11 +234,20 @@ function goBack() {
 }
 
 /**
- * Update Stats Cards
+ * Update Stats Cards and Footer Match Info
  */
-function updateStats(data) {
+function updateSummary(data) {
     elements.totalPlayers.textContent = data.length;
     elements.topScore.textContent = data.length > 0 ? data[0].points.toLocaleString() : '--';
+    
+    // Update footer with latest match info
+    if (data.length > 0 && data[0].matches.length > 0) {
+        const latestMatch = data[0].matches[data[0].matches.length - 1];
+        const info = document.getElementById('update-match-info');
+        if (info) {
+            info.textContent = `Points updated after Match ${latestMatch.number} ${latestMatch.name}`;
+        }
+    }
 }
 
 /**
