@@ -1,43 +1,35 @@
-/**
- * IPL 2026 Fantasy Leaderboard
- * Final Version with User Image Logo
- */
+// Configuration
+const CONFIG = {
+    // Direct Public CSV URL from Google Sheets
+    CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTLE1kQX5IZnCcEI4FogJjv2zlKYZPHhGaDvav4UY73Y9sMUUqAmtpAeMB9RFemawdlnWR6KmrRyYTu/pub?gid=0&single=true&output=csv',
+    REFRESH_INTERVAL: 60000, 
+};
 
+// Fallback Dummy Data (only if fetch fails)
 const TEAM_LOGOS = {
-    'RCB': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/RCB.png?raw=true',
-    'MI': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/MI.png?raw=true',
-    'SRH': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/SRH.png?raw=true',
-    'CSK': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/CSK.png?raw=true',
-    'KKR': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/KKR.png?raw=true',
-    'RR': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/RR.png?raw=true',
-    'PBKS': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/PBKS.png?raw=true',
-    'GT': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/GT.png?raw=true',
-    'LSG': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/LSG.png?raw=true',
-    'DC': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/DC.png?raw=true',
-    'PBK': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/PBKS.png?raw=true'
+  "CSK": "https://documents.iplt20.com/ipl/CSK/logos/Logooutline/CSKoutline.png",
+  "DC": "https://documents.iplt20.com/ipl/DC/Logos/LogoOutline/DCoutline.png",
+  "GT": "https://documents.iplt20.com/ipl/GT/Logos/Logooutline/GToutline.png",
+  "KKR": "https://documents.iplt20.com/ipl/KKR/Logos/Logooutline/KKRoutline.png",
+  "LSG": "https://documents.iplt20.com/ipl/LSG/Logos/Logooutline/LSGoutline.png",
+  "MI": "https://documents.iplt20.com/ipl/MI/Logos/Logooutline/MIoutline.png",
+  "PBKS": "https://documents.iplt20.com/ipl/PBKS/Logos/Logooutline/PBKSoutline.png",
+  "RR": "https://documents.iplt20.com/ipl/RR/Logos/Logooutline/RRoutline.png",
+  "RCB": "https://documents.iplt20.com/ipl/RCB/Logos/Logooutline/RCBoutline.png",
+  "SRH": "https://documents.iplt20.com/ipl/SRH/Logos/Logooutline/SRHoutline.png"
 };
 
 let allPlayerData = [];
-let matchSchedule = [];
 
 const elements = {
     mainView: document.getElementById('main-view'),
-    matchesView: document.getElementById('matches-view'),
     detailsView: document.getElementById('details-view'),
-    matchView: document.getElementById('match-details-view'),
-    overviewStats: document.getElementById('overview-stats'),
-    tabsNav: document.querySelector('.tabs-nav'),
-    tabLeaderboard: document.getElementById('tab-leaderboard'),
-    tabMatches: document.getElementById('tab-matches'),
     list: document.getElementById('leaderboard-list'),
-    allMatchesList: document.getElementById('all-matches-list'),
-    matchLeaderboardList: document.getElementById('match-leaderboard-list'),
     matchesList: document.getElementById('matches-list'),
     detailsName: document.getElementById('details-name'),
     detailsTotal: document.getElementById('details-total-points'),
-    matchName: document.getElementById('match-details-name'),
     backBtn: document.getElementById('back-btn'),
-    matchBackBtn: document.getElementById('match-back-btn'),
+    statsSection: document.getElementById('stats-section'),
     totalPlayers: document.getElementById('total-players'),
     topScore: document.getElementById('top-score'),
     lastUpdated: document.getElementById('last-update-time'),
@@ -47,83 +39,88 @@ const elements = {
  * Initialize the App
  */
 async function init() {
-    setupEventListeners();
     await loadData();
+    setupEventListeners();
+    setInterval(loadData, CONFIG.REFRESH_INTERVAL);
 }
 
 /**
- * Fetch and Parse Data
+ * Load Data from Google Sheet
  */
 async function loadData() {
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTLE1kQX5IZnCcEI4FogJjv2zlKYZPHhGaDvav4UY73Y9sMUUqAmtpAeMB9RFemawdlnWR6KmrRyYTu/pub?output=csv';
-    
     try {
-        const response = await fetch(`${csvUrl}&t=${Date.now()}`);
+        const response = await fetch(CONFIG.CSV_URL);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
         const csvText = await response.text();
         allPlayerData = parseCSV(csvText);
         
-        renderLeaderboard(allPlayerData);
-        renderAllMatches();
-        updateSummary(allPlayerData);
-        elements.lastUpdated.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-        console.error("Fetch Error:", e);
+        if (allPlayerData.length === 0) throw new Error('No data found');
+        console.log('Fetched live data:', allPlayerData);
+    } catch (error) {
+        console.warn('Sync failed. Error:', error.message);
+        if (allPlayerData.length === 0) allPlayerData = DUMMY_DATA;
     }
+
+    renderLeaderboard(allPlayerData);
+    updateSummary(allPlayerData);
+    elements.lastUpdated.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 /**
- * CSV Parser (Discovery Mode)
+ * CSV Parser (Dynamic Layout Discovery)
  */
 function parseCSV(csv) {
     const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
-    if (lines.length < 2) return [];
+    if (lines.length < 1) return [];
     
-    // Discover Meta
-    let matchNamesRow = lines.find(r => r[5] && r[5].toLowerCase().includes(' vs ')) || lines[0];
-    let matchNumbersRow = lines.find(r => r[5] && (r[5] === "1" || r[5] === "Match 1")) || lines[1] || [];
+    // Pass 1: Parse headers and match data metadata
+    const headers = lines[0];
+    const matchNumbers = lines[1] || [];
+    const matchNames = lines[2] || [];
     
     const result = [];
-    matchSchedule = [];
-    const completedMatchIds = new Set();
 
-    // Pass 1: Parse Players
-    for (let i = 0; i < lines.length; i++) {
+    // Pass 2: Main data and Ranks
+    for (let i = 1; i < lines.length; i++) {
         const row = lines[i];
-        if (row[0] && row[0].length > 2 && !row[0].toLowerCase().includes('player name')) {
+        
+        // Case A: Main Player Row (Name in Column A)
+        if (row[0] && !row[0].toLowerCase().includes('player name') && 
+            !row[0].toLowerCase().includes('team name') && 
+            !row[0].toLowerCase().includes('match')) {
+            
             const matches = [];
             for (let j = 5; j < row.length; j++) {
-                const points = row[j] ? row[j].trim() : "";
-                if (points !== "" && points !== null && points !== "-") {
+                const points = row[j] || "";
+                if (points !== "") {
                     matches.push({
-                        id: j,
-                        number: matchNumbersRow[j] || (j - 4).toString(),
-                        name: matchNamesRow[j] || `Match ${j - 4}`,
+                        id: j, // Unique index for mapping
+                        number: matchNumbers[j] || (j - 4),
+                        name: matchNames[j] || (headers[j] && (headers[j].includes(' vs ') || headers[j].length > 5) ? headers[j] : `Match ${j - 4}`),
                         points: points,
-                        rank: null
+                        rank: null // Link later
                     });
-                    completedMatchIds.add(j);
                 }
             }
+
             result.push({
                 name: row[0],
-                rank: Number(row[1]) || (result.length + 1),
+                rank: row[1] || result.length + 1,
                 previousRank: row[2] || null,
-                points: Number(row[3]) || 0,
+                points: row[3] || 0,
                 matches: matches
             });
         }
-    }
-
-    // Pass 2: Map Match Ranks Table (Name in Col E / index 4)
-    for (let i = 0; i < lines.length; i++) {
-        const row = lines[i];
-        if (!row[0] && row[4] && row[4].trim() !== "" && !row[4].toLowerCase().includes('player name')) {
+        
+        // Case B: Rank Table Row (Empty Col A, Name in Column E / index 4)
+        else if (!row[0] && row[4] && row[4].trim() !== "") {
             const pName = row[4].trim();
             const player = result.find(p => p.name === pName);
             if (player) {
                 for (let j = 5; j < row.length; j++) {
                     const mRank = row[j] ? row[j].trim() : "";
-                    if (mRank !== "" && player.matches) {
+                    if (mRank !== "") {
                         const m = player.matches.find(match => match.id === j);
                         if (m) m.rank = mRank;
                     }
@@ -132,20 +129,12 @@ function parseCSV(csv) {
         }
     }
 
-    // Build Schedule
-    for (let j = 5; j < matchNamesRow.length; j++) {
-        const mName = matchNamesRow[j] || "";
-        if (mName !== "" && mName.length > 2) {
-            matchSchedule.push({
-                id: j,
-                number: matchNumbersRow[j] || (j - 4).toString(),
-                name: mName,
-                isCompleted: completedMatchIds.has(j)
-            });
-        }
-    }
-
-    return result.sort((a, b) => a.rank - b.rank);
+    // Sort by rank ascending (1 to last)
+    return result.sort((a, b) => {
+        const rA = parseInt(a.rank) || 999;
+        const rB = parseInt(b.rank) || 999;
+        return rA - rB;
+    });
 }
 
 /**
@@ -153,15 +142,32 @@ function parseCSV(csv) {
  */
 function renderLeaderboard(data) {
     elements.list.innerHTML = '';
-    data.forEach((p) => {
+    
+    data.forEach((p, index) => {
         const item = document.createElement('div');
-        item.className = 'leaderboard-item';
+        item.className = `leaderboard-item ${index < 3 ? 'top-three' : ''}`;
+        
+        let movementIcon = '';
+        if (p.previousRank && p.rank !== p.previousRank) {
+            const current = parseInt(p.rank);
+            const prev = parseInt(p.previousRank);
+            if (current < prev) {
+                movementIcon = `<div style="color:#4ade80; font-size:0.65rem; font-weight:700; margin-top:2px;">▲ Up</div>`;
+            } else if (current > prev) {
+                movementIcon = `<div style="color:#f87171; font-size:0.65rem; font-weight:700; margin-top:2px;">▼ Down</div>`;
+            }
+        }
+
         item.onclick = () => showPlayerDetails(p);
 
         item.innerHTML = `
-            <div class="rank">#${p.rank}</div>
+            <div class="rank" style="display:flex; flex-direction:column; align-items:center;">
+                <span>#${p.rank}</span>
+                ${movementIcon}
+            </div>
             <div class="player-info">
                 <span class="player-name">${p.name}</span>
+                <span class="team-name">Prev Rank: ${p.previousRank || '--'}</span>
             </div>
             <div class="points">${p.points.toLocaleString()}</div>
         `;
@@ -170,146 +176,94 @@ function renderLeaderboard(data) {
 }
 
 /**
- * View Switching Logic
+ * Navigation: Show Details
  */
-function switchView(viewId) {
-    elements.mainView.classList.add('hidden');
-    elements.matchesView.classList.add('hidden');
-    elements.detailsView.classList.add('hidden');
-    elements.matchView.classList.add('hidden');
+function showPlayerDetails(player) {
+    if (!player) return;
     
-    if (viewId === 'leaderboard') {
-        elements.mainView.classList.remove('hidden');
-        elements.overviewStats.classList.remove('hidden');
-        elements.tabsNav.classList.remove('hidden');
-        elements.tabLeaderboard.classList.add('active');
-        elements.tabMatches.classList.remove('active');
-    } else if (viewId === 'matches') {
-        elements.matchesView.classList.remove('hidden');
-        elements.overviewStats.classList.add('hidden');
-        elements.tabsNav.classList.remove('hidden');
-        elements.tabMatches.classList.add('active');
-        elements.tabLeaderboard.classList.remove('active');
-    } else if (viewId === 'details') {
-        elements.detailsView.classList.remove('hidden');
-        elements.overviewStats.classList.add('hidden');
-        elements.tabsNav.classList.add('hidden');
-    } else if (viewId === 'match-results') {
-        elements.matchView.classList.remove('hidden');
-        elements.overviewStats.classList.add('hidden');
-        elements.tabsNav.classList.add('hidden');
+    // Direct display switch for absolute reliability
+    elements.mainView.style.setProperty('display', 'none', 'important');
+    elements.statsSection.style.setProperty('display', 'none', 'important');
+    elements.detailsView.style.setProperty('display', 'block', 'important');
+    elements.detailsView.classList.remove('hidden');
+    
+    elements.detailsName.textContent = player.name;
+    elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
+    
+    elements.matchesList.innerHTML = '';
+    
+    if (!player.matches || player.matches.length === 0) {
+        elements.matchesList.innerHTML = '<div style="padding:40px; text-align:center; opacity:0.6; color:#fff;">No match points tracked for this player yet.</div>';
+    } else {
+        player.matches.forEach(m => {
+            const row = document.createElement('div');
+            row.className = 'match-item';
+            
+            const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+            let logoHtml = '';
+            if (teamParts.length === 2) {
+                const logo1 = TEAM_LOGOS[teamParts[0]] || '';
+                const logo2 = TEAM_LOGOS[teamParts[1]] || '';
+                logoHtml = `
+                    <div class="match-logos">
+                        ${logo1 ? `<img src="${logo1}" class="mini-logo">` : ''}
+                        <span class="vs-text">vs</span>
+                        ${logo2 ? `<img src="${logo2}" class="mini-logo">` : ''}
+                    </div>
+                `;
+            }
+
+            row.innerHTML = `
+                <span class="match-num">${m.number}</span>
+                <div class="match-info">
+                    ${logoHtml}
+                    <span class="match-name">${m.name}</span>
+                </div>
+                <div class="match-points-col">
+                    <span class="match-points">${m.points}</span>
+                    ${m.rank ? `<span class="match-rank">#${m.rank} Rank</span>` : ''}
+                </div>
+            `;
+            elements.matchesList.appendChild(row);
+        });
     }
     
     window.scrollTo(0, 0);
 }
 
 /**
- * Navigation Actions
+ * Navigation: Back to Leaderboard
  */
-function showPlayerDetails(player) {
-    if (!player) return;
-    switchView('details');
-    elements.detailsName.textContent = player.name;
-    elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
-    
-    elements.matchesList.innerHTML = '';
-    if (!player.matches || player.matches.length === 0) {
-        elements.matchesList.innerHTML = '<div style="padding:40px; text-align:center; opacity:0.6; color:#fff;">No match points yet.</div>';
-    } else {
-        player.matches.forEach(m => {
-            const row = document.createElement('div');
-            row.className = 'match-item';
-            
-            const teamParts = m.name.split(/\s+vs\s+/i).map(t => t.trim().toUpperCase());
-            let logos = '';
-            if (teamParts.length === 2) {
-                const logo1 = TEAM_LOGOS[teamParts[0]] || '';
-                const logo2 = TEAM_LOGOS[teamParts[1]] || '';
-                logos = `<div class="match-logos">${logo1 ? `<img src="${logo1}" class="mini-logo">` : ''}<span class="vs-text">vs</span>${logo2 ? `<img src="${logo2}" class="mini-logo">` : ''}</div>`;
-            }
-
-            row.innerHTML = `<span class="match-num">${m.number}</span><div class="match-info">${logos}<span class="match-name">${m.name}</span></div><div class="match-points-col"><span class="match-points">${m.points}</span>${m.rank ? `<span class="match-rank">#${m.rank} Rank</span>` : ''}</div>`;
-            elements.matchesList.appendChild(row);
-        });
-    }
-}
-
-function showMatchResults(match) {
-    switchView('match-results');
-    elements.matchName.textContent = `${match.number}: ${match.name}`;
-    elements.matchLeaderboardList.innerHTML = '';
-    
-    const rankings = allPlayerData
-        .map(p => {
-            const mData = p.matches.find(m => m.id === match.id);
-            return { name: p.name, points: mData ? parseFloat(mData.points) || 0 : 0 };
-        })
-        .sort((a, b) => b.points - a.points);
-        
-    rankings.forEach((r, idx) => {
-        const row = document.createElement('div');
-        row.className = 'match-item';
-        row.style.gridTemplateColumns = '50px 1fr 100px';
-        row.innerHTML = `<span class="rank">#${idx + 1}</span><span class="player-name" style="font-weight:600;">${r.name}</span><span class="match-points">${r.points}</span>`;
-        elements.matchLeaderboardList.appendChild(row);
-    });
-}
-
 function goBack() {
-    if (elements.tabLeaderboard.classList.contains('active')) switchView('leaderboard');
-    else switchView('matches');
+    elements.detailsView.style.setProperty('display', 'none', 'important');
+    elements.statsSection.style.setProperty('display', 'grid', 'important'); // Use grid to match CSS
+    elements.mainView.style.setProperty('display', 'block', 'important');
+    window.scrollTo(0, 0);
 }
 
 /**
- * Render All Matches Tab
- */
-function renderAllMatches() {
-    elements.allMatchesList.innerHTML = '';
-    matchSchedule.forEach(m => {
-        const item = document.createElement('div');
-        item.className = 'leaderboard-item';
-        item.style.gridTemplateColumns = '50px 1fr auto';
-        
-        const teamParts = m.name.split(/\s+vs\s+/i).map(t => t.trim().toUpperCase());
-        let logos = '';
-        if (teamParts.length === 2) {
-            const l1 = TEAM_LOGOS[teamParts[0]] || '';
-            const l2 = TEAM_LOGOS[teamParts[1]] || '';
-            logos = `<div class="match-logos">${l1 ? `<img src="${l1}" class="mini-logo">` : ''}<span class="vs-text">vs</span>${l2 ? `<img src="${l2}" class="mini-logo">` : ''}</div>`;
-        }
-
-        item.innerHTML = `<div class="rank">#${m.number.replace('Match ', '')}</div><div class="player-info">${logos}<span class="player-name">${m.name}</span></div><div class="points" style="font-size:0.7rem; font-weight:700; color:${m.isCompleted ? 'var(--gold)' : 'var(--text-secondary)'}">${m.isCompleted ? 'RESULTS' : 'SOON'}</div>`;
-        
-        if (m.isCompleted) {
-            item.style.cursor = 'pointer';
-            item.onclick = (e) => { e.stopPropagation(); showMatchResults(m); };
-        }
-        elements.allMatchesList.appendChild(item);
-    });
-}
-
-/**
- * Update Stats
+ * Update Stats Cards and Footer Match Info
  */
 function updateSummary(data) {
     elements.totalPlayers.textContent = data.length;
-    const top = data.length > 0 ? Math.max(...data.map(p => Number(p.points))) : 0;
-    elements.topScore.textContent = top.toLocaleString();
+    elements.topScore.textContent = data.length > 0 ? data[0].points.toLocaleString() : '--';
     
+    // Update footer with latest match info
     if (data.length > 0 && data[0].matches.length > 0) {
-        const lastM = data[0].matches[data[0].matches.length - 1];
-        document.getElementById('update-match-info').textContent = `Summary as of Match ${lastM.number}: ${lastM.name}`;
+        const latestMatch = data[0].matches[data[0].matches.length - 1];
+        const info = document.getElementById('update-match-info');
+        if (info) {
+            info.textContent = `Points updated after Match ${latestMatch.number} ${latestMatch.name}`;
+        }
     }
 }
 
 /**
- * Events
+ * Event Listeners
  */
 function setupEventListeners() {
     elements.backBtn.onclick = goBack;
-    elements.matchBackBtn.onclick = goBack;
-    elements.tabLeaderboard.onclick = () => switchView('leaderboard');
-    elements.tabMatches.onclick = () => switchView('matches');
 }
 
 document.addEventListener('DOMContentLoaded', init);
+

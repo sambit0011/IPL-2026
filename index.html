@@ -15,7 +15,7 @@
         <!-- Header -->
         <header>
             <div class="logo-container">
-                <img id="ipl-logo" src="ipl_logo.webp" alt="IPL 2026 Logo">
+                <img id="ipl-logo" src="assets/ipl_logo.jpg" alt="IPL 2026 Logo">
                 <div class="header-text">
                     <h1>IPL 2026</h1>
                     <p>FANTASY LEADERBOARD</p>
@@ -24,25 +24,17 @@
 
         </header>
 
-        <!-- Tab Navigation -->
-        <nav class="tabs-nav">
-            <button id="tab-leaderboard" class="tab-btn active">Leaderboard</button>
-            <button id="tab-matches" class="tab-btn">All Matches</button>
-        </nav>
-
-        <!-- Stats Overview (Hidden on details) -->
-        <div id="overview-stats">
-            <section class="stats-grid">
-                <div class="stat-card">
-                    <p class="stat-label">TOTAL PLAYERS</p>
-                    <h3 id="total-players">0</h3>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-label">TOP SCORE</p>
-                    <h3 id="top-score">0</h3>
-                </div>
-            </section>
-        </div>
+        <!-- Stats Overview -->
+        <section id="stats-section" class="stats-overview">
+            <div class="stat-card">
+                <p class="stat-label">TOTAL PLAYERS</p>
+                <div id="total-players" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">TOP SCORE</p>
+                <div id="top-score" class="stat-value">0</div>
+            </div>
+        </section>
 
         <!-- Main Dashboard View -->
         <main id="main-view" class="leaderboard-section">
@@ -59,42 +51,6 @@
                 </div>
             </div>
         </main>
-
-        <!-- All Matches View (Hidden by default) -->
-        <main id="matches-view" class="leaderboard-section hidden">
-            <div class="leaderboard-header">
-                <span class="rank">#</span>
-                <span class="player">Match</span>
-                <span class="points">Date/Status</span>
-            </div>
-            <div id="all-matches-list" class="leaderboard-list">
-                <!-- Matches will be injected here -->
-            </div>
-        </main>
-
-        <!-- Match Specific Leaderboard View (Hidden by default) -->
-        <section id="match-details-view" class="details-section hidden">
-            <header class="details-header">
-                <button id="match-back-btn" class="back-button">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                </button>
-                <div class="header-text">
-                    <h2 id="match-details-name" class="player-name">--</h2>
-                    <p id="match-details-label" class="total-points">Match Results</p>
-                </div>
-            </header>
-
-            <div class="matches-container">
-                <div class="match-header" style="grid-template-columns: 50px 1fr 100px;">
-                    <span>Rank</span>
-                    <span>Player</span>
-                    <span>Points</span>
-                </div>
-                <div id="match-leaderboard-list" class="matches-list">
-                    <!-- Match Rankings here -->
-                </div>
-            </div>
-        </section>
 
         <!-- Player Details View (Hidden by default) -->
         <section id="details-view" class="details-section hidden">

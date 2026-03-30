@@ -29,11 +29,6 @@ body {
     min-height: 100vh;
 }
 
-.hidden {
-    display: none !important;
-}
-
-
 .app-container {
     max-width: 480px; /* Mobile focused */
     margin: 0 auto;
@@ -148,38 +143,6 @@ header {
 .stat-value {
     font-size: 1.4rem;
     font-weight: 700;
-}
-
-.tabs-nav {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding: 0 16px;
-}
-
-.tab-btn {
-    flex: 1;
-    background: var(--bg-card);
-    border: 1px solid var(--glass-border);
-    color: var(--text-secondary);
-    padding: 12px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.tab-btn.active {
-    background: var(--gold);
-    color: #000;
-    border-color: var(--gold);
-    box-shadow: 0 4px 15px rgba(252, 196, 25, 0.3);
-}
-
-/* Overview Transition */
-#overview-stats {
-    transition: all 0.3s ease;
 }
 
 /* Leaderboard */
@@ -426,9 +389,5 @@ footer p {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 480px) {
-    .match-logos { gap: 6px; }
 }
 
