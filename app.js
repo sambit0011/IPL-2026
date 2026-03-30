@@ -67,32 +67,47 @@ async function loadData() {
 }
 
 /**
- * CSV Parser (Name@0, Rank@1, Total@3, MatchName@HeaderF+, Points@Row2+F+)
+ * CSV Parser (Dynamic Layout Discovery)
  */
 function parseCSV(csv) {
-    const lines = csv.split('\n');
-    if (lines.length < 2) return [];
+    const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
+    if (lines.length < 1) return [];
     
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const result = [];
+    let matchNames = lines[0]; // Fallback to first row
+    let matchNumbers = [];
+    let dataStartRow = 1;
 
-    // Start from Row 2 (index 1)
-    for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        
-        // Filter out empty rows or headers
+    // Discovery: Find Match Names and Numbers in first 5 rows
+    for (let i = 0; i < Math.min(5, lines.length); i++) {
+        const row = lines[i];
+        // If row has " vs " in Col F (index 5)
+        if (row[5] && row[5].toLowerCase().includes(' vs ')) {
+            matchNames = row;
+        }
+        // If row has "1" in Col F (index 5)
+        if (row[5] === "1") {
+            matchNumbers = row;
+        }
+        // If row starts with a player name and it's not a header
+        if (row[0] && !row[0].toLowerCase().includes('player name') && 
+            !row[0].toLowerCase().includes('team name') && 
+            !row[0].toLowerCase().includes('match')) {
+            dataStartRow = Math.min(dataStartRow, i);
+        }
+    }
+
+    const result = [];
+    for (let i = dataStartRow; i < lines.length; i++) {
+        const row = lines[i];
         if (row.length < 4 || !row[0] || row[0].toLowerCase().includes('player name')) continue;
 
-        // Capture match data (starting from index 5 / Column F)
         const matches = [];
         for (let j = 5; j < row.length; j++) {
-            const points = row[j] ? row[j].trim() : "";
-            const mName = headers[j] || `Match ${j - 4}`;
-            
-            if (points !== "" && points !== null) {
+            const points = row[j] || "";
+            if (points !== "") {
                 matches.push({
-                    number: j - 4,
-                    name: mName,
+                    number: matchNumbers[j] || (j - 4),
+                    name: matchNames[j] || `Match ${j - 4}`,
                     points: points
                 });
             }
@@ -100,7 +115,7 @@ function parseCSV(csv) {
 
         result.push({
             name: row[0],
-            rank: row[1] || i,
+            rank: row[1] || result.length + 1,
             previousRank: row[2] || null,
             points: row[3] || 0,
             matches: matches
