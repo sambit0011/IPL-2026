@@ -9,7 +9,7 @@ A sleek, mobile-first web dashboard to display fantasy rankings and points, sync
     - `index.html`
     - `style.css`
     - `app.js`
-    - `assets/ipl_logo.png` (Make sure the folder structure is maintained)
+    - `assets/ipl_logo.jpg` (Make sure the folder structure is maintained)
 3.  **Enable GitHub Pages**:
     - Go to your repository **Settings**.
     - Click **Pages** in the left sidebar.

@@ -53,37 +53,26 @@ async function loadData() {
 }
 
 /**
- * CSV Parser (Custom for your sheet: Name@0, Rank@1, Total@3)
+ * CSV Parser (Strictly uses sheet columns: Name@0, Rank@1, PrevRank@2, Total@3)
  */
 function parseCSV(csv) {
     const lines = csv.split('\n');
     const result = [];
 
-    // Skip Header Line & Filter data
+    // Skip first header, then filter
     for (let i = 1; i < lines.length; i++) {
         const row = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
         
-        // Skip if row is empty or name is "Player Name"
-        if (row.length < 4 || !row[0] || row[0].toLowerCase() === 'player name') continue;
+        // Filter out empty rows or header rows
+        if (row.length < 4 || !row[0] || row[0].toLowerCase().includes('player name')) continue;
 
         result.push({
             name: row[0],
-            previousRank: parseInt(row[2]) || null,
-            points: parseFloat(row[3]) || 0,
+            rank: row[1] || i, // Use rank directly from sheet
+            previousRank: row[2] || null,
+            points: row[3] || 0, // Use points directly from sheet
             team: "POINTS TABLE" 
         });
-    }
-
-    // Sort by points descending first
-    result.sort((a, b) => b.points - a.points);
-
-    // Dynamic Competition Ranking (1, 1, 3...)
-    let currentRank = 1;
-    for (let i = 0; i < result.length; i++) {
-        if (i > 0 && result[i].points < result[i-1].points) {
-            currentRank = i + 1;
-        }
-        result[i].rank = currentRank;
     }
 
     return result;
@@ -102,16 +91,24 @@ function renderLeaderboard(data) {
 
     data.forEach((p, index) => {
         const item = document.createElement('div');
-        item.className = `leaderboard-item ${p.rank <= 3 ? 'top-three' : ''}`;
+        item.className = `leaderboard-item ${index < 3 ? 'top-three' : ''}`;
         
         let movementIcon = '';
-        if (p.previousRank) {
-            if (p.rank < p.previousRank) movementIcon = '<span style="color:#4ade80; font-size:0.7rem; margin-top:2px;">▲ Up</span>';
-            else if (p.rank > p.previousRank) movementIcon = '<span style="color:#f87171; font-size:0.7rem; margin-top:2px;">▼ Down</span>';
+        if (p.previousRank && p.rank !== p.previousRank) {
+            const current = parseInt(p.rank);
+            const prev = parseInt(p.previousRank);
+            if (current < prev) {
+                movementIcon = `<div style="color:#4ade80; font-size:0.65rem; font-weight:700; margin-top:2px;">▲ Up</div>`;
+            } else if (current > prev) {
+                movementIcon = `<div style="color:#f87171; font-size:0.65rem; font-weight:700; margin-top:2px;">▼ Down</div>`;
+            }
         }
 
         item.innerHTML = `
-            <div class="rank">#${p.rank} ${movementIcon}</div>
+            <div class="rank" style="display:flex; flex-direction:column; align-items:center;">
+                <span>#${p.rank}</span>
+                ${movementIcon}
+            </div>
             <div class="player-info">
                 <span class="player-name">${p.name}</span>
                 <span class="team-name">${p.team}</span>
