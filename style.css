@@ -145,6 +145,38 @@ header {
     font-weight: 700;
 }
 
+.tabs-nav {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 0 16px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
+    box-shadow: 0 4px 15px rgba(252, 196, 25, 0.3);
+}
+
+/* Overview Transition */
+#overview-stats {
+    transition: all 0.3s ease;
+}
+
 /* Leaderboard */
 .leaderboard-section {
     flex-grow: 1;

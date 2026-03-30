@@ -23,8 +23,14 @@ let allPlayerData = [];
 
 const elements = {
     mainView: document.getElementById('main-view'),
+    matchesView: document.getElementById('matches-view'),
     detailsView: document.getElementById('details-view'),
+    overviewStats: document.getElementById('overview-stats'),
+    tabsNav: document.querySelector('.tabs-nav'),
+    tabLeaderboard: document.getElementById('tab-leaderboard'),
+    tabMatches: document.getElementById('tab-matches'),
     list: document.getElementById('leaderboard-list'),
+    allMatchesList: document.getElementById('all-matches-list'),
     matchesList: document.getElementById('matches-list'),
     detailsName: document.getElementById('details-name'),
     detailsTotal: document.getElementById('details-total-points'),
@@ -33,6 +39,8 @@ const elements = {
     topScore: document.getElementById('top-score'),
     lastUpdated: document.getElementById('last-update-time'),
 };
+
+let matchSchedule = [];
 
 /**
  * Initialize the App
@@ -62,6 +70,7 @@ async function loadData() {
     }
 
     renderLeaderboard(allPlayerData);
+    renderAllMatches();
     updateSummary(allPlayerData);
     elements.lastUpdated.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -71,49 +80,53 @@ async function loadData() {
  */
 function parseCSV(csv) {
     const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
-    if (lines.length < 1) return [];
+    if (lines.length < 3) return [];
     
-    // Pass 1: Parse headers and match data metadata
     const headers = lines[0];
     const matchNumbers = lines[1] || [];
     const matchNames = lines[2] || [];
     
     const result = [];
+    matchSchedule = [];
 
-    // Pass 2: Main data and Ranks
-    for (let i = 1; i < lines.length; i++) {
+    // Parse Match Schedule
+    for (let j = 5; j < matchNames.length; j++) {
+        if (matchNames[j] && matchNames[j] !== "") {
+            matchSchedule.push({
+                number: matchNumbers[j] || (j - 4),
+                name: matchNames[j]
+            });
+        }
+    }
+
+    // Pass 1: Parse Players (Starting Row 4)
+    for (let i = 3; i < lines.length; i++) {
         const row = lines[i];
-        
-        // Case A: Main Player Row (Name in Column A)
-        if (row[0] && !row[0].toLowerCase().includes('player name') && 
-            !row[0].toLowerCase().includes('team name') && 
-            !row[0].toLowerCase().includes('match')) {
-            
+        if (row[0] && !row[0].toLowerCase().includes('player name')) {
             const matches = [];
             for (let j = 5; j < row.length; j++) {
                 const points = row[j] || "";
-                if (points !== "") {
+                if (points !== "" && points !== null) {
                     matches.push({
-                        id: j, // Unique index for mapping
+                        id: j,
                         number: matchNumbers[j] || (j - 4),
-                        name: matchNames[j] || (headers[j] && (headers[j].includes(' vs ') || headers[j].length > 5) ? headers[j] : `Match ${j - 4}`),
+                        name: matchNames[j] || `Match ${j - 4}`,
                         points: points,
-                        rank: null // Link later
+                        rank: null
                     });
                 }
             }
-
             result.push({
                 name: row[0],
-                rank: row[1] || result.length + 1,
+                rank: parseInt(row[1]) || (result.length + 1),
                 previousRank: row[2] || null,
                 points: row[3] || 0,
                 matches: matches
             });
         }
         
-        // Case B: Rank Table Row (Empty Col A, Name in Column E / index 4)
-        else if (!row[0] && row[4] && row[4].trim() !== "") {
+        // Pass 2: Ranks (Player name in Column E / index 4)
+        else if (!row[0] && row[4] && row[4].trim() !== "" && !row[4].toLowerCase().includes('player name')) {
             const pName = row[4].trim();
             const player = result.find(p => p.name === pName);
             if (player) {
@@ -128,7 +141,8 @@ function parseCSV(csv) {
         }
     }
 
-    return result;
+    // Sort by Rank obtained from sheet (ascending)
+    return result.sort((a, b) => a.rank - b.rank);
 }
 
 /**
@@ -175,10 +189,12 @@ function renderLeaderboard(data) {
 function showPlayerDetails(player) {
     if (!player) return;
     
-    // Direct display switch for absolute reliability
+    // Hide tabs, overview stats, and main views
+    elements.tabsNav.style.display = 'none';
+    elements.overviewStats.style.display = 'none';
     elements.mainView.style.setProperty('display', 'none', 'important');
+    elements.matchesView.style.setProperty('display', 'none', 'important');
     elements.detailsView.style.setProperty('display', 'block', 'important');
-    elements.detailsView.classList.remove('hidden');
     
     elements.detailsName.textContent = player.name;
     elements.detailsTotal.textContent = `${player.points.toLocaleString()} Total Points`;
@@ -229,8 +245,52 @@ function showPlayerDetails(player) {
  */
 function goBack() {
     elements.detailsView.style.setProperty('display', 'none', 'important');
-    elements.mainView.style.setProperty('display', 'block', 'important');
+    elements.tabsNav.style.display = 'flex';
+    elements.overviewStats.style.display = 'block';
+    
+    // Switch to whichever tab was active
+    if (elements.tabLeaderboard.classList.contains('active')) {
+        elements.mainView.style.setProperty('display', 'block', 'important');
+    } else {
+        elements.matchesView.style.setProperty('display', 'block', 'important');
+    }
     window.scrollTo(0, 0);
+}
+
+/**
+ * Render All Matches List
+ */
+function renderAllMatches() {
+    elements.allMatchesList.innerHTML = '';
+    
+    matchSchedule.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'leaderboard-item';
+        
+        const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
+        let logoHtml = '';
+        if (teamParts.length === 2) {
+            const logo1 = TEAM_LOGOS[teamParts[0]] || '';
+            const logo2 = TEAM_LOGOS[teamParts[1]] || '';
+            logoHtml = `
+                <div class="match-logos">
+                    ${logo1 ? `<img src="${logo1}" class="mini-logo">` : ''}
+                    <span class="vs-text">vs</span>
+                    ${logo2 ? `<img src="${logo2}" class="mini-logo">` : ''}
+                </div>
+            `;
+        }
+
+        item.innerHTML = `
+            <div class="rank">#${m.number.replace('Match ', '')}</div>
+            <div class="player-info" style="display:flex; align-items:center; gap:12px;">
+                ${logoHtml}
+                <span class="player-name">${m.name}</span>
+            </div>
+            <div class="points" style="font-size:0.75rem; color:var(--text-secondary);">Scheduled</div>
+        `;
+        elements.allMatchesList.appendChild(item);
+    });
 }
 
 /**
@@ -255,6 +315,20 @@ function updateSummary(data) {
  */
 function setupEventListeners() {
     elements.backBtn.onclick = goBack;
+    
+    elements.tabLeaderboard.onclick = () => {
+        elements.tabLeaderboard.classList.add('active');
+        elements.tabMatches.classList.remove('active');
+        elements.mainView.style.setProperty('display', 'block', 'important');
+        elements.matchesView.style.setProperty('display', 'none', 'important');
+    };
+    
+    elements.tabMatches.onclick = () => {
+        elements.tabMatches.classList.add('active');
+        elements.tabLeaderboard.classList.remove('active');
+        elements.matchesView.style.setProperty('display', 'block', 'important');
+        elements.mainView.style.setProperty('display', 'none', 'important');
+    };
 }
 
 document.addEventListener('DOMContentLoaded', init);

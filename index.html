@@ -24,17 +24,25 @@
 
         </header>
 
-        <!-- Stats Overview -->
-        <section class="stats-overview">
-            <div class="stat-card gold">
-                <span class="stat-label">Total Players</span>
-                <span id="total-players" class="stat-value">--</span>
-            </div>
-            <div class="stat-card blue">
-                <span class="stat-label">Top Score</span>
-                <span id="top-score" class="stat-value">--</span>
-            </div>
-        </section>
+        <!-- Tab Navigation -->
+        <nav class="tabs-nav">
+            <button id="tab-leaderboard" class="tab-btn active">Leaderboard</button>
+            <button id="tab-matches" class="tab-btn">All Matches</button>
+        </nav>
+
+        <!-- Stats Overview (Hidden on details) -->
+        <div id="overview-stats">
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <p class="stat-label">TOTAL PLAYERS</p>
+                    <h3 id="total-players">0</h3>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">TOP SCORE</p>
+                    <h3 id="top-score">0</h3>
+                </div>
+            </section>
+        </div>
 
         <!-- Main Dashboard View -->
         <main id="main-view" class="leaderboard-section">
@@ -49,6 +57,18 @@
                     <div class="shimmer-item"></div>
                     <div class="shimmer-item"></div>
                 </div>
+            </div>
+        </main>
+
+        <!-- All Matches View (Hidden by default) -->
+        <main id="matches-view" class="leaderboard-section hidden">
+            <div class="leaderboard-header">
+                <span class="rank">#</span>
+                <span class="player">Match</span>
+                <span class="points">Date/Status</span>
+            </div>
+            <div id="all-matches-list" class="leaderboard-list">
+                <!-- Matches will be injected here -->
             </div>
         </main>
 
