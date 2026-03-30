@@ -76,38 +76,42 @@ async function loadData() {
 }
 
 /**
- * CSV Parser (Name@0, Rank@1, Total@3, AllMatches@HeaderF+)
+ * CSV Parser (Discovery Mode)
  */
 function parseCSV(csv) {
     const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
     if (lines.length < 2) return [];
     
-    const headers = lines[0];
-    const result = [];
+    // 1. Discover Metadata Rows
+    let matchNamesRow = lines.find(r => r[5] && r[5].toLowerCase().includes(' vs ')) || lines[0];
+    let matchNumbersRow = lines.find(r => r[5] && (r[5] === "1" || r[5] === "Match 1")) || lines[1] || [];
+    
+    // 2. Build Global Schedule
     matchSchedule = [];
-
-    // Parse Match Schedule from headers (Index 5 onwards)
-    for (let j = 5; j < headers.length; j++) {
-        if (headers[j] && headers[j] !== "" && !headers[j].toLowerCase().includes('total')) {
+    for (let j = 5; j < matchNamesRow.length; j++) {
+        const mName = matchNamesRow[j] || "";
+        if (mName !== "" && mName.length > 2) {
             matchSchedule.push({
-                number: (j - 4).toString(),
-                name: headers[j]
+                number: matchNumbersRow[j] || (j - 4).toString(),
+                name: mName
             });
         }
     }
 
-    // Parse Players (Start from Row 2 / index 1)
-    for (let i = 1; i < lines.length; i++) {
+    const result = [];
+
+    // Pass 1: Parse All Players (Row starts with Name)
+    for (let i = 0; i < lines.length; i++) {
         const row = lines[i];
-        if (row[0] && !row[0].toLowerCase().includes('player name')) {
+        if (row[0] && row[0].length > 2 && !row[0].toLowerCase().includes('player name')) {
             const matches = [];
             for (let j = 5; j < row.length; j++) {
                 const points = row[j] || "";
                 if (points !== "" && points !== null) {
                     matches.push({
                         id: j,
-                        number: (j - 4).toString(),
-                        name: headers[j] || `Match ${j - 4}`,
+                        number: matchNumbersRow[j] || (j - 4).toString(),
+                        name: matchNamesRow[j] || `Match ${j - 4}`,
                         points: points,
                         rank: null
                     });
@@ -115,15 +119,18 @@ function parseCSV(csv) {
             }
             result.push({
                 name: row[0],
-                rank: parseInt(row[1]) || (result.length + 1),
+                rank: parseInt(row[1]) || (result.length + 1), // Sorting rank
                 previousRank: row[2] || null,
                 points: row[3] || 0,
                 matches: matches
             });
         }
-        
-        // Pass 2: Ranks (Player name in Column E / index 4)
-        else if (!row[0] && row[4] && row[4].trim() !== "" && !row[4].toLowerCase().includes('player name')) {
+    }
+
+    // Pass 2: Map Match Ranks (Row starts with Empty Col A, Name in Col E / index 4)
+    for (let i = 0; i < lines.length; i++) {
+        const row = lines[i];
+        if (!row[0] && row[4] && row[4].trim() !== "" && !row[4].toLowerCase().includes('player name')) {
             const pName = row[4].trim();
             const player = result.find(p => p.name === pName);
             if (player) {
@@ -138,7 +145,7 @@ function parseCSV(csv) {
         }
     }
 
-    // Sort by Rank obtained from sheet Column B (ascending: 1 to 10)
+    // Final Sort: Descending (Top Rank #1 at top)
     return result.sort((a, b) => a.rank - b.rank);
 }
 
