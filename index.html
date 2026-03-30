@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPL 2026 Fantasy Leaderboard</title>
+    <meta name="description" content="Official IPL 2026 Fantasy Leaderboard Dashboard. Track live scores and rankings.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="logo-container">
+                <img id="ipl-logo" src="assets/ipl_logo.png" alt="IPL 2026 Logo">
+                <div class="header-text">
+                    <h1>FANTASY LEADERBOARD</h1>
+                    <p>SEASON 2026 • LIVE UPDATES</p>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="playerSearch" placeholder="Search team or name...">
+                <span class="search-icon">🔍</span>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <section class="stats-overview">
+            <div class="stat-card gold">
+                <span class="stat-label">Total Players</span>
+                <span id="total-players" class="stat-value">--</span>
+            </div>
+            <div class="stat-card blue">
+                <span class="stat-label">Top Score</span>
+                <span id="top-score" class="stat-value">--</span>
+            </div>
+        </section>
+
+        <!-- Leaderboard -->
+        <main class="leaderboard-section">
+            <div class="leaderboard-header">
+                <span class="rank">#</span>
+                <span class="player">Player</span>
+                <span class="points">Points</span>
+            </div>
+            <div id="leaderboard-list" class="leaderboard-list">
+                <!-- Data will be injected here -->
+                <div class="loading-shimmer">
+                    <div class="shimmer-item"></div>
+                    <div class="shimmer-item"></div>
+                    <div class="shimmer-item"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>Data synced from Google Sheets</p>
+            <div class="last-sync">Last updated: <span id="last-update-time">Just now</span></div>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

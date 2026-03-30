@@ -1,0 +1,264 @@
+:root {
+    --bg-dark: #07091e;
+    --bg-card: rgba(255, 255, 255, 0.04);
+    --bg-card-hover: rgba(255, 255, 255, 0.08);
+    --gold: #fcc419;
+    --gold-glow: rgba(252, 196, 25, 0.3);
+    --ipl-blue: #1e3a8a;
+    --ipl-blue-light: #3b82f6;
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --radius: 16px;
+    --font: 'Outfit', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font);
+    line-height: 1.5;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+.app-container {
+    max-width: 480px; /* Mobile focused */
+    margin: 0 auto;
+    padding: 20px 16px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+header {
+    margin-bottom: 24px;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+#ipl-logo {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(30, 58, 138, 0.5));
+}
+
+.header-text h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: linear-gradient(to right, #fff, var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-text p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Search Bar */
+.search-bar {
+    position: relative;
+    width: 100%;
+}
+
+#playerSearch {
+    width: 100%;
+    padding: 14px 20px 14px 44px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+#playerSearch:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 15px var(--gold-glow);
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+}
+
+/* Stats Overview */
+.stats-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.stat-card.gold {
+    border-bottom: 3px solid var(--gold);
+}
+
+.stat-card.blue {
+    border-bottom: 3px solid var(--ipl-blue-light);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+/* Leaderboard */
+.leaderboard-section {
+    flex-grow: 1;
+}
+
+.leaderboard-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.leaderboard-item {
+    display: grid;
+    grid-template-columns: 50px 1fr 80px;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    animation: slideIn 0.5s ease-out both;
+}
+
+.leaderboard-item:hover {
+    background: var(--bg-card-hover);
+    transform: scale(1.02);
+}
+
+.leaderboard-item.top-three .rank {
+    color: var(--gold);
+    font-weight: 800;
+}
+
+.rank {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.player-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.team-name {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.points {
+    font-weight: 700;
+    text-align: right;
+    font-size: 1rem;
+    color: var(--gold);
+}
+
+/* Loading & Footer */
+.loading-shimmer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shimmer-item {
+    height: 60px;
+    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 12px;
+}
+
+footer {
+    margin-top: 30px;
+    text-align: center;
+    padding: 20px 0;
+    border-top: 1px solid var(--glass-border);
+}
+
+footer p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.last-sync {
+    font-size: 0.65rem;
+    margin-top: 4px;
+    opacity: 0.6;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shimmer {
+    to { background-position: -200% 0; }
+}
