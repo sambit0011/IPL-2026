@@ -72,6 +72,30 @@
             </div>
         </main>
 
+        <!-- Match Specific Leaderboard View (Hidden by default) -->
+        <section id="match-details-view" class="details-section hidden">
+            <header class="details-header">
+                <button id="match-back-btn" class="back-button">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="header-text">
+                    <h2 id="match-details-name" class="player-name">--</h2>
+                    <p id="match-details-label" class="total-points">Match Results</p>
+                </div>
+            </header>
+
+            <div class="matches-container">
+                <div class="match-header" style="grid-template-columns: 50px 1fr 100px;">
+                    <span>Rank</span>
+                    <span>Player</span>
+                    <span>Points</span>
+                </div>
+                <div id="match-leaderboard-list" class="matches-list">
+                    <!-- Match Rankings here -->
+                </div>
+            </div>
+        </section>
+
         <!-- Player Details View (Hidden by default) -->
         <section id="details-view" class="details-section hidden">
             <header class="details-header">

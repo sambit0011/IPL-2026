@@ -423,3 +423,7 @@ footer p {
     to { opacity: 1; transform: translateY(0); }
 }
 
+@media (max-width: 480px) {
+    .match-logos { gap: 6px; }
+}
+

@@ -22,19 +22,22 @@ const TEAM_LOGOS = {
 let allPlayerData = [];
 
 const elements = {
-    mainView: document.getElementById('main-view'),
     matchesView: document.getElementById('matches-view'),
     detailsView: document.getElementById('details-view'),
+    matchView: document.getElementById('match-details-view'), // New
     overviewStats: document.getElementById('overview-stats'),
     tabsNav: document.querySelector('.tabs-nav'),
     tabLeaderboard: document.getElementById('tab-leaderboard'),
     tabMatches: document.getElementById('tab-matches'),
     list: document.getElementById('leaderboard-list'),
     allMatchesList: document.getElementById('all-matches-list'),
+    matchLeaderboardList: document.getElementById('match-leaderboard-list'), // New
     matchesList: document.getElementById('matches-list'),
     detailsName: document.getElementById('details-name'),
     detailsTotal: document.getElementById('details-total-points'),
+    matchName: document.getElementById('match-details-name'), // New
     backBtn: document.getElementById('back-btn'),
+    matchBackBtn: document.getElementById('match-back-btn'), // New
     totalPlayers: document.getElementById('total-players'),
     topScore: document.getElementById('top-score'),
     lastUpdated: document.getElementById('last-update-time'),
@@ -86,12 +89,12 @@ function parseCSV(csv) {
     let matchNamesRow = lines.find(r => r[5] && r[5].toLowerCase().includes(' vs ')) || lines[0];
     let matchNumbersRow = lines.find(r => r[5] && (r[5] === "1" || r[5] === "Match 1")) || lines[1] || [];
     
-    // 2. Build Global Schedule
-    matchSchedule = [];
+    // Parse Match Schedule
     for (let j = 5; j < matchNamesRow.length; j++) {
         const mName = matchNamesRow[j] || "";
         if (mName !== "" && mName.length > 2) {
             matchSchedule.push({
+                id: j, // Column Index
                 number: matchNumbersRow[j] || (j - 4).toString(),
                 name: mName
             });
@@ -273,9 +276,12 @@ function renderAllMatches() {
     }
 
     matchSchedule.forEach(m => {
+        // Find if any player has points for this match column
+        const isCompleted = allPlayerData.some(p => p.matches.some(pm => pm.id === parseInt(m.id || -1)));
+
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
-        item.style.gridTemplateColumns = '50px 1fr';
+        item.style.gridTemplateColumns = '50px 1fr auto';
         
         const teamParts = m.name.split(' vs ').map(t => t.trim().toUpperCase());
         let logoHtml = '';
@@ -297,9 +303,59 @@ function renderAllMatches() {
                 ${logoHtml}
                 <span class="player-name">${m.name}</span>
             </div>
+            <div class="points" style="font-size:0.75rem; color:${isCompleted ? 'var(--gold)' : 'var(--text-secondary)'};">
+                ${isCompleted ? 'COMPLETED' : 'SCHEDULED'}
+            </div>
         `;
+        
+        if (isCompleted) {
+            item.style.cursor = 'pointer';
+            item.onclick = () => showMatchDetails(m);
+        }
+        
         elements.allMatchesList.appendChild(item);
     });
+}
+
+/**
+ * Render Match Specific Leaderboard
+ */
+function showMatchDetails(match) {
+    elements.tabsNav.style.display = 'none';
+    elements.overviewStats.style.display = 'none';
+    elements.mainView.style.setProperty('display', 'none', 'important');
+    elements.matchesView.style.setProperty('display', 'none', 'important');
+    elements.detailsView.style.setProperty('display', 'none', 'important');
+    elements.matchView.style.setProperty('display', 'block', 'important');
+    
+    elements.matchName.textContent = `Match ${match.number}: ${match.name}`;
+    elements.matchLeaderboardList.innerHTML = '';
+    
+    // Sort players by points in ONLY this match
+    const matchId = parseInt(match.id);
+    const rankings = allPlayerData
+        .map(p => {
+            const mData = p.matches.find(m => m.id === matchId);
+            return {
+                name: p.name,
+                points: mData ? parseFloat(mData.points) || 0 : 0
+            };
+        })
+        .sort((a, b) => b.points - a.points);
+        
+    rankings.forEach((r, idx) => {
+        const row = document.createElement('div');
+        row.className = 'match-item';
+        row.style.gridTemplateColumns = '50px 1fr 100px';
+        row.innerHTML = `
+            <span class="rank" style="color:var(--text-secondary); font-weight:700;">#${idx + 1}</span>
+            <span class="player-name" style="font-weight:600;">${r.name}</span>
+            <span class="match-points" style="color:var(--gold); font-weight:800; text-align:right;">${r.points}</span>
+        `;
+        elements.matchLeaderboardList.appendChild(row);
+    });
+    
+    window.scrollTo(0, 0);
 }
 
 /**
@@ -324,6 +380,7 @@ function updateSummary(data) {
  */
 function setupEventListeners() {
     elements.backBtn.onclick = goBack;
+    elements.matchBackBtn.onclick = goBack; // Both use same logic
     
     elements.tabLeaderboard.onclick = () => {
         elements.tabLeaderboard.classList.add('active');
@@ -331,6 +388,7 @@ function setupEventListeners() {
         elements.overviewStats.style.display = 'block';
         elements.mainView.style.setProperty('display', 'block', 'important');
         elements.matchesView.style.setProperty('display', 'none', 'important');
+        elements.matchView.style.setProperty('display', 'none', 'important');
     };
     
     elements.tabMatches.onclick = () => {
@@ -339,6 +397,7 @@ function setupEventListeners() {
         elements.overviewStats.style.display = 'none';
         elements.matchesView.style.setProperty('display', 'block', 'important');
         elements.mainView.style.setProperty('display', 'none', 'important');
+        elements.matchView.style.setProperty('display', 'none', 'important');
     };
 }
 
