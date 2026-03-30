@@ -59,22 +59,34 @@ function parseCSV(csv) {
     const lines = csv.split('\n');
     const result = [];
 
-    // Skip Header Line
+    // Skip Header Line & Filter data
     for (let i = 1; i < lines.length; i++) {
         const row = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        if (row.length < 4 || !row[0]) continue;
+        
+        // Skip if row is empty or name is "Player Name"
+        if (row.length < 4 || !row[0] || row[0].toLowerCase() === 'player name') continue;
 
         result.push({
             name: row[0],
-            rank: parseInt(row[1]) || i,
             previousRank: parseInt(row[2]) || null,
             points: parseFloat(row[3]) || 0,
-            team: "POINTS TABLE" // Placeholder since it's not on the sheet
+            team: "POINTS TABLE" 
         });
     }
 
-    // Sort by rank ascending (since rank is provided) or points descending if ranks are missing
-    return result.sort((a, b) => a.rank - b.rank);
+    // Sort by points descending first
+    result.sort((a, b) => b.points - a.points);
+
+    // Dynamic Competition Ranking (1, 1, 3...)
+    let currentRank = 1;
+    for (let i = 0; i < result.length; i++) {
+        if (i > 0 && result[i].points < result[i-1].points) {
+            currentRank = i + 1;
+        }
+        result[i].rank = currentRank;
+    }
+
+    return result;
 }
 
 /**
@@ -92,7 +104,6 @@ function renderLeaderboard(data) {
         const item = document.createElement('div');
         item.className = `leaderboard-item ${p.rank <= 3 ? 'top-three' : ''}`;
         
-        // Calculate movement if previous rank exists
         let movementIcon = '';
         if (p.previousRank) {
             if (p.rank < p.previousRank) movementIcon = '<span style="color:#4ade80; font-size:0.7rem; margin-top:2px;">▲ Up</span>';
@@ -105,7 +116,7 @@ function renderLeaderboard(data) {
                 <span class="player-name">${p.name}</span>
                 <span class="team-name">${p.team}</span>
             </div>
-            <div class="points">${p.points.toLocaleString()} pts</div>
+            <div class="points">${p.points.toLocaleString()}</div>
         `;
         elements.list.appendChild(item);
     });
