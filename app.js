@@ -76,31 +76,28 @@ async function loadData() {
 }
 
 /**
- * CSV Parser (Dynamic Layout Discovery)
+ * CSV Parser (Name@0, Rank@1, Total@3, AllMatches@HeaderF+)
  */
 function parseCSV(csv) {
     const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
-    if (lines.length < 3) return [];
+    if (lines.length < 2) return [];
     
     const headers = lines[0];
-    const matchNumbers = lines[1] || [];
-    const matchNames = lines[2] || [];
-    
     const result = [];
     matchSchedule = [];
 
-    // Parse Match Schedule
-    for (let j = 5; j < matchNames.length; j++) {
-        if (matchNames[j] && matchNames[j] !== "") {
+    // Parse Match Schedule from headers (Index 5 onwards)
+    for (let j = 5; j < headers.length; j++) {
+        if (headers[j] && headers[j] !== "" && !headers[j].toLowerCase().includes('total')) {
             matchSchedule.push({
-                number: matchNumbers[j] || (j - 4),
-                name: matchNames[j]
+                number: (j - 4).toString(),
+                name: headers[j]
             });
         }
     }
 
-    // Pass 1: Parse Players (Starting Row 4)
-    for (let i = 3; i < lines.length; i++) {
+    // Parse Players (Start from Row 2 / index 1)
+    for (let i = 1; i < lines.length; i++) {
         const row = lines[i];
         if (row[0] && !row[0].toLowerCase().includes('player name')) {
             const matches = [];
@@ -109,8 +106,8 @@ function parseCSV(csv) {
                 if (points !== "" && points !== null) {
                     matches.push({
                         id: j,
-                        number: matchNumbers[j] || (j - 4),
-                        name: matchNames[j] || `Match ${j - 4}`,
+                        number: (j - 4).toString(),
+                        name: headers[j] || `Match ${j - 4}`,
                         points: points,
                         rank: null
                     });
@@ -141,7 +138,7 @@ function parseCSV(csv) {
         }
     }
 
-    // Sort by Rank obtained from sheet (ascending)
+    // Sort by Rank obtained from sheet Column B (ascending: 1 to 10)
     return result.sort((a, b) => a.rank - b.rank);
 }
 
