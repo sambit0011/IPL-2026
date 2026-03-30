@@ -1,28 +1,13 @@
-/**
- * IPL 2026 Fantasy Leaderboard
- * Fetching data from Google Sheets (via CSV export)
- */
-
-// Configuration - USER: Replace with your actual Google Sheet ID
+// Configuration
 const CONFIG = {
-    // Standard format: 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:csv&sheet=SHEET_NAME'
-    SHEET_ID: '1T6E2K6G-Xf6oV9H66-K5Uq7zH3-3H-6G-H6vH-Xf6oV', // Placeholder
-    SHEET_NAME: 'Sheet1', // Name of your sheet tab
-    REFRESH_INTERVAL: 60000, // 1 minute
+    // Direct Public CSV URL from Google Sheets
+    CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTLE1kQX5IZnCcEI4FogJjv2zlKYZPHhGaDvav4UY73Y9sMUUqAmtpAeMB9RFemawdlnWR6KmrRyYTu/pub?gid=0&single=true&output=csv',
+    REFRESH_INTERVAL: 60000, 
 };
 
-// Fallback Dummy Data (for initial demo)
+// Fallback Dummy Data (only if fetch fails)
 const DUMMY_DATA = [
-    { rank: 1, name: "Sambit Pradhan", team: "Mumbai Indians", points: 1250 },
-    { rank: 2, name: "Rahul Sharma", team: "CSK", points: 1180 },
-    { rank: 3, name: "Anish Kumar", team: "RCB", points: 1120 },
-    { rank: 4, name: "Priya Singh", team: "KKR", points: 1050 },
-    { rank: 5, name: "Vivek Das", team: "GT", points: 980 },
-    { rank: 6, name: "Sita Ram", team: "LSG", points: 940 },
-    { rank: 7, name: "Arjun Rao", team: "SRH", points: 890 },
-    { rank: 8, name: "Kiran Patil", team: "RR", points: 850 },
-    { rank: 9, name: "Deepak Ved", team: "DC", points: 820 },
-    { rank: 10, name: "Mehul Jain", team: "PBKS", points: 790 },
+    { rank: 1, name: "Pritam", team: "Fantasy Manager", points: 1764.5 },
 ];
 
 let allPlayerData = [];
@@ -41,31 +26,25 @@ const elements = {
 async function init() {
     await loadData();
     setupEventListeners();
-    
-    // Auto-refresh every minute
     setInterval(loadData, CONFIG.REFRESH_INTERVAL);
 }
 
 /**
- * Load Data from Google Sheet or Fallback
+ * Load Data from Google Sheet
  */
 async function loadData() {
     try {
-        const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${CONFIG.SHEET_NAME}`;
-        
-        // Note: This will fail unless the Google Sheet is "Published to Web" as CSV
-        const response = await fetch(url);
+        const response = await fetch(CONFIG.CSV_URL);
         if (!response.ok) throw new Error('Network response was not ok');
         
         const csvText = await response.text();
         allPlayerData = parseCSV(csvText);
         
         if (allPlayerData.length === 0) throw new Error('No data found');
-        
         console.log('Fetched live data:', allPlayerData);
     } catch (error) {
-        console.warn('Using demo data (live sheet not found or inaccessible). Error:', error.message);
-        allPlayerData = DUMMY_DATA;
+        console.warn('Sync failed. Error:', error.message);
+        if (allPlayerData.length === 0) allPlayerData = DUMMY_DATA;
     }
 
     renderLeaderboard(allPlayerData);
@@ -74,46 +53,54 @@ async function loadData() {
 }
 
 /**
- * Basic CSV Parser (Custom for these columns: Name, Team, Points)
+ * CSV Parser (Custom for your sheet: Name@0, Rank@1, Total@3)
  */
 function parseCSV(csv) {
     const lines = csv.split('\n');
     const result = [];
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
 
+    // Skip Header Line
     for (let i = 1; i < lines.length; i++) {
-        const currentLine = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        if (currentLine.length < 3) continue;
+        const row = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        if (row.length < 4 || !row[0]) continue;
 
-        const player = {
-            rank: i,
-            name: currentLine[0],
-            team: currentLine[1],
-            points: parseInt(currentLine[2]) || 0,
-        };
-        result.push(player);
+        result.push({
+            name: row[0],
+            rank: parseInt(row[1]) || i,
+            previousRank: parseInt(row[2]) || null,
+            points: parseFloat(row[3]) || 0,
+            team: "POINTS TABLE" // Placeholder since it's not on the sheet
+        });
     }
-    return result.sort((a, b) => b.points - a.points).map((p, idx) => ({ ...p, rank: idx + 1 }));
+
+    // Sort by rank ascending (since rank is provided) or points descending if ranks are missing
+    return result.sort((a, b) => a.rank - b.rank);
 }
 
 /**
- * Render List to DOM
+ * Render List up to DOM
  */
 function renderLeaderboard(data) {
     elements.list.innerHTML = '';
-
+    
     if (data.length === 0) {
-        elements.list.innerHTML = '<div class="no-results">No players found matching your search.</div>';
+        elements.list.innerHTML = '<div class="no-results" style="text-align:center; padding:20px; color:var(--text-secondary);">No players found.</div>';
         return;
     }
 
     data.forEach((p, index) => {
         const item = document.createElement('div');
         item.className = `leaderboard-item ${p.rank <= 3 ? 'top-three' : ''}`;
-        item.style.animationDelay = `${index * 0.05}s`;
+        
+        // Calculate movement if previous rank exists
+        let movementIcon = '';
+        if (p.previousRank) {
+            if (p.rank < p.previousRank) movementIcon = '<span style="color:#4ade80; font-size:0.7rem; margin-top:2px;">▲ Up</span>';
+            else if (p.rank > p.previousRank) movementIcon = '<span style="color:#f87171; font-size:0.7rem; margin-top:2px;">▼ Down</span>';
+        }
 
         item.innerHTML = `
-            <div class="rank">#${p.rank}</div>
+            <div class="rank">#${p.rank} ${movementIcon}</div>
             <div class="player-info">
                 <span class="player-name">${p.name}</span>
                 <span class="team-name">${p.team}</span>
@@ -139,12 +126,11 @@ function setupEventListeners() {
     elements.search.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const filtered = allPlayerData.filter(p => 
-            p.name.toLowerCase().includes(searchTerm) || 
-            p.team.toLowerCase().includes(searchTerm)
+            p.name.toLowerCase().includes(searchTerm)
         );
         renderLeaderboard(filtered);
     });
 }
 
-// Start
 document.addEventListener('DOMContentLoaded', init);
+
