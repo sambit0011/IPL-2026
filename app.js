@@ -1,20 +1,20 @@
 /**
  * IPL 2026 Fantasy Leaderboard
- * Final Fixed Version
+ * Final Version with User Image Logo
  */
 
 const TEAM_LOGOS = {
-    'RCB': 'https://www.iplt20.com/assets/images/teams-logo/secondary/RCB.png',
-    'MI': 'https://www.iplt20.com/assets/images/teams-logo/secondary/MI.png',
-    'SRH': 'https://www.iplt20.com/assets/images/teams-logo/secondary/SRH.png',
-    'CSK': 'https://www.iplt20.com/assets/images/teams-logo/secondary/CSK.png',
-    'KKR': 'https://www.iplt20.com/assets/images/teams-logo/secondary/KKR.png',
-    'RR': 'https://www.iplt20.com/assets/images/teams-logo/secondary/RR.png',
-    'PBKS': 'https://www.iplt20.com/assets/images/teams-logo/secondary/PBKS.png',
-    'GT': 'https://www.iplt20.com/assets/images/teams-logo/secondary/GT.png',
-    'LSG': 'https://www.iplt20.com/assets/images/teams-logo/secondary/LSG.png',
-    'DC': 'https://www.iplt20.com/assets/images/teams-logo/secondary/DC.png',
-    'PBK': 'https://www.iplt20.com/assets/images/teams-logo/secondary/PBKS.png' // Alias
+    'RCB': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/RCB.png?raw=true',
+    'MI': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/MI.png?raw=true',
+    'SRH': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/SRH.png?raw=true',
+    'CSK': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/CSK.png?raw=true',
+    'KKR': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/KKR.png?raw=true',
+    'RR': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/RR.png?raw=true',
+    'PBKS': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/PBKS.png?raw=true',
+    'GT': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/GT.png?raw=true',
+    'LSG': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/LSG.png?raw=true',
+    'DC': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/DC.png?raw=true',
+    'PBK': 'https://github.com/Pratyush-Sinha/IPL-Logos/blob/master/PBKS.png?raw=true'
 };
 
 let allPlayerData = [];
@@ -61,8 +61,6 @@ async function loadData() {
         const response = await fetch(`${csvUrl}&t=${Date.now()}`);
         const csvText = await response.text();
         allPlayerData = parseCSV(csvText);
-        
-        console.log("Parsed Player Data:", allPlayerData);
         
         renderLeaderboard(allPlayerData);
         renderAllMatches();
@@ -116,7 +114,7 @@ function parseCSV(csv) {
         }
     }
 
-    // Pass 2: Ranks Table Mapping
+    // Pass 2: Map Match Ranks Table (Name in Col E / index 4)
     for (let i = 0; i < lines.length; i++) {
         const row = lines[i];
         if (!row[0] && row[4] && row[4].trim() !== "" && !row[4].toLowerCase().includes('player name')) {
@@ -175,13 +173,11 @@ function renderLeaderboard(data) {
  * View Switching Logic
  */
 function switchView(viewId) {
-    // Hide everything
     elements.mainView.classList.add('hidden');
     elements.matchesView.classList.add('hidden');
     elements.detailsView.classList.add('hidden');
     elements.matchView.classList.add('hidden');
     
-    // Show requested
     if (viewId === 'leaderboard') {
         elements.mainView.classList.remove('hidden');
         elements.overviewStats.classList.remove('hidden');
@@ -224,7 +220,7 @@ function showPlayerDetails(player) {
             const row = document.createElement('div');
             row.className = 'match-item';
             
-            const teamParts = m.name.split(/\s+[vV][sS]\s+/).map(t => t.trim().toUpperCase());
+            const teamParts = m.name.split(/\s+vs\s+/i).map(t => t.trim().toUpperCase());
             let logos = '';
             if (teamParts.length === 2) {
                 const logo1 = TEAM_LOGOS[teamParts[0]] || '';
@@ -240,7 +236,7 @@ function showPlayerDetails(player) {
 
 function showMatchResults(match) {
     switchView('match-results');
-    elements.matchName.textContent = `Match ${match.number}: ${match.name}`;
+    elements.matchName.textContent = `${match.number}: ${match.name}`;
     elements.matchLeaderboardList.innerHTML = '';
     
     const rankings = allPlayerData
