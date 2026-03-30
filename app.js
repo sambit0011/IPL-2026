@@ -73,53 +73,59 @@ function parseCSV(csv) {
     const lines = csv.split('\n').map(l => l.split(',').map(v => v.trim().replace(/"/g, '')));
     if (lines.length < 1) return [];
     
-    let matchNames = lines[0]; // Fallback to first row
-    let matchNumbers = [];
-    let dataStartRow = 1;
+    // Pass 1: Parse headers and match data metadata
+    const headers = lines[0];
+    const matchNumbers = lines[1] || [];
+    const matchNames = lines[2] || [];
+    
+    const result = [];
 
-    // Discovery: Find Match Names and Numbers in first 5 rows
-    for (let i = 0; i < Math.min(5, lines.length); i++) {
+    // Pass 2: Main data and Ranks
+    for (let i = 1; i < lines.length; i++) {
         const row = lines[i];
-        // If row has " vs " in Col F (index 5)
-        if (row[5] && row[5].toLowerCase().includes(' vs ')) {
-            matchNames = row;
-        }
-        // If row has "1" in Col F (index 5)
-        if (row[5] === "1") {
-            matchNumbers = row;
-        }
-        // If row starts with a player name and it's not a header
+        
+        // Case A: Main Player Row (Name in Column A)
         if (row[0] && !row[0].toLowerCase().includes('player name') && 
             !row[0].toLowerCase().includes('team name') && 
             !row[0].toLowerCase().includes('match')) {
-            dataStartRow = Math.min(dataStartRow, i);
+            
+            const matches = [];
+            for (let j = 5; j < row.length; j++) {
+                const points = row[j] || "";
+                if (points !== "") {
+                    matches.push({
+                        id: j, // Unique index for mapping
+                        number: matchNumbers[j] || (j - 4),
+                        name: matchNames[j] || (headers[j] && (headers[j].includes(' vs ') || headers[j].length > 5) ? headers[j] : `Match ${j - 4}`),
+                        points: points,
+                        rank: null // Link later
+                    });
+                }
+            }
+
+            result.push({
+                name: row[0],
+                rank: row[1] || result.length + 1,
+                previousRank: row[2] || null,
+                points: row[3] || 0,
+                matches: matches
+            });
         }
-    }
-
-    const result = [];
-    for (let i = dataStartRow; i < lines.length; i++) {
-        const row = lines[i];
-        if (row.length < 4 || !row[0] || row[0].toLowerCase().includes('player name')) continue;
-
-        const matches = [];
-        for (let j = 5; j < row.length; j++) {
-            const points = row[j] || "";
-            if (points !== "") {
-                matches.push({
-                    number: matchNumbers[j] || (j - 4),
-                    name: matchNames[j] || `Match ${j - 4}`,
-                    points: points
-                });
+        
+        // Case B: Rank Table Row (Empty Col A, Name in Column E / index 4)
+        else if (!row[0] && row[4] && row[4].trim() !== "") {
+            const pName = row[4].trim();
+            const player = result.find(p => p.name === pName);
+            if (player) {
+                for (let j = 5; j < row.length; j++) {
+                    const mRank = row[j] ? row[j].trim() : "";
+                    if (mRank !== "") {
+                        const m = player.matches.find(match => match.id === j);
+                        if (m) m.rank = mRank;
+                    }
+                }
             }
         }
-
-        result.push({
-            name: row[0],
-            rank: row[1] || result.length + 1,
-            previousRank: row[2] || null,
-            points: row[3] || 0,
-            matches: matches
-        });
     }
 
     return result;
@@ -206,7 +212,10 @@ function showPlayerDetails(player) {
                     ${logoHtml}
                     <span class="match-name">${m.name}</span>
                 </div>
-                <span class="match-points">${m.points}</span>
+                <div class="match-points-col">
+                    <span class="match-points">${m.points}</span>
+                    ${m.rank ? `<span class="match-rank">#${m.rank} Rank</span>` : ''}
+                </div>
             `;
             elements.matchesList.appendChild(row);
         });

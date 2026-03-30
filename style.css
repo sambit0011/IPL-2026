@@ -367,14 +367,23 @@ footer p {
     font-weight: 700;
 }
 
-.match-name {
-    font-weight: 500;
+.match-points-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .match-points {
-    text-align: right;
     font-weight: 700;
     color: var(--gold);
+    font-size: 1.1rem;
+}
+
+.match-rank {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-top: 2px;
 }
 
 @keyframes fadeIn {
