@@ -112,7 +112,7 @@ function parseCSV(csv) {
                 const points = row[j] || "";
                 if (points !== "" && points !== null) {
                     matches.push({
-                        id: j,
+                        id: j, // Column Index
                         number: matchNumbersRow[j] || (j - 4).toString(),
                         name: matchNamesRow[j] || `Match ${j - 4}`,
                         points: points,
@@ -122,7 +122,7 @@ function parseCSV(csv) {
             }
             result.push({
                 name: row[0],
-                rank: parseInt(row[1]) || (result.length + 1), // Sorting rank
+                rank: Number(row[1]) || (result.length + 1), // Strictly numeric
                 previousRank: row[2] || null,
                 points: row[3] || 0,
                 matches: matches
@@ -252,14 +252,15 @@ function showPlayerDetails(player) {
  */
 function goBack() {
     elements.detailsView.style.setProperty('display', 'none', 'important');
+    elements.matchView.style.setProperty('display', 'none', 'important');
     elements.tabsNav.style.display = 'flex';
-    elements.overviewStats.style.display = 'block';
     
-    // Switch to whichever tab was active
     if (elements.tabLeaderboard.classList.contains('active')) {
         elements.mainView.style.setProperty('display', 'block', 'important');
+        elements.overviewStats.style.display = 'block';
     } else {
         elements.matchesView.style.setProperty('display', 'block', 'important');
+        elements.overviewStats.style.display = 'none';
     }
     window.scrollTo(0, 0);
 }
