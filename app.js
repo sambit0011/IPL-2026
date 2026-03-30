@@ -111,7 +111,7 @@ function renderLeaderboard(data) {
             </div>
             <div class="player-info">
                 <span class="player-name">${p.name}</span>
-                <span class="team-name">${p.team}</span>
+                <span class="team-name">Prev Rank: ${p.previousRank || '--'}</span>
             </div>
             <div class="points">${p.points.toLocaleString()}</div>
         `;
